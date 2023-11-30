@@ -1,0 +1,20 @@
+body {
+  font-family: Monaco;
+  background-image: url("/static/images/background.jpg");
+}
+
+h1 {
+  margin-bottom: 2em;
+}
+
+.main {
+  text-align: center;
+  padding: 50px;
+  margin-top: 5em;
+  box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+  background-color: #f8f9fa;
+}
+
+.form-content {
+  text-align: left;
+}
