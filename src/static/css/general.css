@@ -15,6 +15,12 @@ h1 {
   background-color: #f8f9fa;
 }
 
+.msg {
+  position:absolute;
+  bottom:0;
+  width: 20%;
+}
+
 .form-content {
   text-align: left;
 }
