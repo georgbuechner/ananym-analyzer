@@ -1,59 +1,66 @@
 import os
 from flask import Flask, flash, render_template, redirect, request
-from werkzeug.utils import secure_filename
+from service import Service
 
-UPLOAD_FOLDER = 'data/raw/'
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'mp3'}
+UPLOAD_FOLDER = 'data/'
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-def allowed_file(filename):
-    print(filename, filename.rsplit('.', 1)[1].lower())
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+service = Service(UPLOAD_FOLDER)
 
 @app.route("/")
 def main(): 
     return render_template("index.html")
 
-@app.route("/data")
-def data(): 
-    return render_template("data.html")
+@app.route("/data/raw")
+def data_raw(): 
+    return render_template("data_raw.html", data=service.get_raw())
+
+@app.route("/data/sweeps")
+def data_sweeps(): 
+    return render_template("data_sweeps.html", data=service.get_sweeps())
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload(): 
     if request.method == 'POST':
-        print(request.files)
         # check if the post request has the file part
         if 'igorFile' not in request.files:
             flash('No file part', 'danger')
-            return redirect(request.url)
-        file = request.files['igorFile']
-        date = request.form.get("creationDate");
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
-        if file.filename == '' or date == '':
-            flash('No file or creation-date', 'danger')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            # Create date-dir if not exists
-            path_to_date = os.path.join(app.config['UPLOAD_FOLDER'], date)
-            if not os.path.exists(path_to_date): 
-                os.makedirs(path_to_date) 
-            # Store file if not exists
-            path_to_file = os.path.join(
-                path_to_date, secure_filename(file.filename)
-            )
-            if os.path.exists(path_to_file): 
-                flash('File already exists', 'danger')
-            else:
-                file.save(path_to_file)
-                flash('Upload success!', 'success')
-        else: 
-            flash('Invalid file type!', 'danger')
+        else:
+            file = request.files['igorFile']
+            date = request.form.get("creationDate");
+            extract = "unpackIgorCheck" in request.form
+            msg, msg_type = service.upload_raw(file, date, extract)
+            flash(msg, msg_type)
     return render_template("upload.html")
+
+@app.route("/handle/raw", methods=["POST"])
+def handle_raw(): 
+    print(request.form)
+    date = request.form.get('dir')
+    file = request.form.get("file")
+    if "unpack-raw-data" in request.form:
+        msg, msg_type = service.unpack_raw(date, file)
+    elif "delete-raw-data" in request.form: 
+        msg, msg_type = service.delete_data(service.dir_raw, date, file)
+    flash(msg, msg_type)
+    return redirect("/data/raw")
+
+@app.route("/handle/sweeps", methods=["POST"])
+def handle_sweeps(): 
+    print(request.form)
+    date = request.form.get('dir')
+    file = request.form.get("file")
+    if "analyze-sweeps" in request.form:
+        return redirect("/analyze")
+    elif "delete-sweeps" in request.form: 
+        msg, msg_type = service.delete_data(service.dir_sweeps, date, file)
+    flash(msg, msg_type)
+    return redirect("/data/sweeps")
+
+
+
 
 
 if __name__ == "__main__": 

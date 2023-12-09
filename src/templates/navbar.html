@@ -6,8 +6,20 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link {% if 'data' in request.path %} active {% endif %}" aria-current="page" href="/data">Data</a>
+        <li class="nav-item dropdown">
+          <a 
+            class="nav-link dropdown-toggle {% if 'data' in request.path %} active {% endif %}" 
+            href="#" id="navbarDropdown" 
+            role="button" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false"
+          >
+            Data
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item {% if 'data/raw' in request.path %} active {% endif %}" href="/data/raw">Raw</a></li>
+            <li><a class="dropdown-item {% if 'data/sweeps' in request.path %} active {% endif %}" href="/data/sweeps">Sweeps</a></li>
+          </ul>
         </li>
         <li class="nav-item">
           <a class="nav-link {% if 'upload' in request.path %} active {% endif %}" aria-current="page" href="/upload">Upload</a>

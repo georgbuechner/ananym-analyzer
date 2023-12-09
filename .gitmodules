@@ -1,3 +1,4 @@
 [submodule "src/extractor"]
 	path = src/extractor
 	url = git@github.com:AnnaBronec/in-vitro_data_analysis.git
+  branch = refactoring
