@@ -5,3 +5,5 @@ def ensure_dir_exists(path: str) -> None:
     if not os.path.exists(directory): 
         os.makedirs(directory) 
 
+def stem(filename: str) -> str:
+    return os.path.splitext(filename)[0]
