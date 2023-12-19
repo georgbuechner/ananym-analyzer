@@ -2,6 +2,7 @@ import os
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
 from service import Service
 from utils import stem
+from extractor.functions import Peaks
 
 UPLOAD_FOLDER = 'data/'
 
@@ -22,6 +23,10 @@ def data_raw():
 def data_sweeps(): 
     return render_template("data_sweeps.html", data=service.get_sweeps())
 
+@app.route("/data/analysis")
+def data_analysis(): 
+    return render_template("data_analysis.html", data=service.get_analysis())
+
 @app.route("/upload", methods=["GET", "POST"])
 def upload(): 
     if request.method == 'POST':
@@ -40,7 +45,14 @@ def upload():
 def analysis(date: str, file: str): 
     if request.method == 'POST':
         print(request.form)
-        service.do_analysis(date, file, request.form.get("sweep_selection"))
+        msg, msg_type = service.do_analysis(
+            date=date, 
+            filename=file, 
+            avrg="avrgCheck" in request.form,
+            start=int(request.form.get("sweep_range"))-1,
+            end=int(request.form.get("sweep_range_to"))-1
+        )
+        flash(msg, msg_type)
     filename, name, version = service.split_sweeps_name(file)
     return render_template(
         "analysis.html",
@@ -48,12 +60,12 @@ def analysis(date: str, file: str):
         name=name,
         filename=filename,
         version=version,
-        analysis=service.get_analysis(date, file)
+        analysis=service.get_single_analysis(date, file),
+        num_sweeps=service.num_sweeps(date, file)
     )
 
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 
-    print(request.form)
     date = request.form.get('dir')
     file = request.form.get("file")
     if "unpack-raw-data" in request.form:
@@ -65,7 +77,6 @@ def handle_raw():
 
 @app.route("/handle/sweeps", methods=["POST"])
 def handle_sweeps(): 
-    print(request.form)
     date = request.form.get('dir')
     file = request.form.get("file")
     if "analyze-sweeps" in request.form:
@@ -75,12 +86,45 @@ def handle_sweeps():
     flash(msg, msg_type)
     return redirect("/data/sweeps")
 
+@app.route("/handle/analysis", methods=["POST"])
+def handle_analysis(): 
+    date = request.form.get('dir')
+    file = request.form.get("file")
+    if "view-all" in request.form:
+        return redirect(f"/analysis/{date}/{stem(file)}")
+    elif "delete-all" in request.form: 
+        msg, msg_type = service.delete_data(service.dir_analysis, date, file)
+    flash(msg, msg_type)
+    return redirect("/data/analysis")
+
+@app.route("/handle/analysis/peaks", methods=["POST"])
+def analyse_peaks(): 
+    peaks_info = Peaks(
+        start=float(request.form["peak_start"]), 
+        step=float(request.form["peak_step"]), 
+        interval=float(request.form["peak_interval"]), 
+        num_intervals=int(request.form["peak_num_intervals"])
+    )
+    return service.calc_peaks(request.form.get('path'), peaks_info)
+
+
+@app.route("/delete/analysis", methods=["POST"])
+def delete_analysis(): 
+    path = request.form.get('path')
+    date = request.form.get('date')
+    filename = request.form.get('filename')
+    print(request.form)
+    try:
+        os.remove(path)
+        flash("Successfully deleted analysis.", "success")
+    except Exception as e:
+        flash(f"Failed: {repr(e)}.", "success")
+    return redirect(f"/analysis/{date}/{filename}")
+
 @app.route('/data/analysis/<date>/<name>/<filename>')
 def serve_image(date, name, filename):
     # Specify the path to the directory where your images are stored
     image_directory = os.path.abspath(os.path.join(service.dir_analysis, date, name))
-    print("Got image path: ", image_directory, filename)
-    print("exists? ", os.path.exists(os.path.join(image_directory, filename)))
     return send_from_directory(image_directory, filename)
 
 

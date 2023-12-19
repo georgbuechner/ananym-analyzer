@@ -46,3 +46,7 @@ h1 {
 .link-button:active {
   color:red;
 }
+
+.indicators {
+  background-color: #ff0101 !important;
+}

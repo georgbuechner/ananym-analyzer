@@ -1,0 +1,52 @@
+<!doctype html>
+{% extends "layout.html" %}
+{% block body %}
+
+<h1>Analysis</h1>
+
+<div class="accordion" id="accordionRawData">
+  {% for dir, files in data.items() %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{loop.index}}">
+      <button 
+        class="accordion-button" 
+        type="button" 
+        data-bs-toggle="collapse"
+        data-bs-target="#collapse{{loop.index}}" 
+        aria-expanded="true" 
+        aria-controls="collapse{{loop.index}}"
+      >
+        {{dir}}
+      </button>
+    </h2>
+    <div 
+      id="collapse{{loop.index}}" 
+      class="accordion-collapse collapse show" 
+      aria-labelledby="heading{{loop.index}}" 
+      data-bs-parent="#accordionRawData"
+    >
+      <div class="accordion-body">
+        <ul class="list-group list-group-flush">
+          {% for filename, name, version in files %}
+            <li class="list-group-item">
+              <b>{{name}}</b> <i>(v: {{version}})</i>
+              <form method="post" action="/handle/analysis" class="float-end">
+                <input type="hidden" name="dir" value="{{dir}}">
+                <input type="hidden" name="file" value="{{filename}}">
+                <button type="submit" name="delete-all" value="" class="link-button">
+                  Delete All
+                </button>
+                <button type="submit" name="view-all" value="" class="link-button">
+                  View
+                </button>
+              </form>
+            </i>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</ol>
+
+{% endblock %}

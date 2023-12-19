@@ -14,13 +14,37 @@
 
 <form action="/analysis/{{date}}/{{filename}}" method="POST">
   <div class="container-sm form-content">
-    <div class="mb-3">
-      <select class="form-select" name="sweep_selection" aria-label="Default select example">
-        <option value="" selected>Select sweep(s)</option>
-        <option value="in_a_row">In a row</option>
-        <option value="first_last">First and last</option>
-        <option value="average">Average</option>
-      </select>
+    <div class="form-group">
+      <label for="sweep_range" class="form-label">Select sweeps</label>
+      <div class="input-group flex-nowrap">
+        <span class="input-group-text" id="rangeval">1<!-- Default value --></span>
+        <span class="input-group-text me-3" id="to_rangeval">{{num_sweeps}}<!-- Default value --></span>
+        <input 
+          type="range" 
+          class="form-range me-2" 
+          min="1" 
+          max="{{num_sweeps}}" 
+          id="sweep_range"
+          name="sweep_range"
+          value=1
+          onChange="CheckFromSlider();"
+          >
+          <input 
+            type="range" 
+            class="form-range" 
+            min="1" 
+            max="{{num_sweeps}}" 
+            id="sweep_range_to"
+            name="sweep_range_to"
+            value="{{num_sweeps}}"
+            onChange="CheckToSlider();"
+            >
+
+      </div>
+    </div>
+    <div class="mb-3 form-check">
+      <input type="checkbox" class="form-check-input" id="arvgCheck" name="avrgCheck">
+      <label class="form-check-label" for="unpackIgorCheck">Average</label>
     </div>
   </div>
   <button type="submit" class="btn btn-primary">Analyze</button>
@@ -30,31 +54,91 @@
 
 <h4>Analysis</h4>
 {% if analysis %}
-  <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+  <div id="carouselExampleIndicators" class="carousel carousel-dark slide" data-bs-ride="carousel">
   <div class="carousel-indicators">
-    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
-    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
-    <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+    {% for path, _, _, _ in analysis %}
+      {% if ".svg" in path %}
+        <button 
+          type="button" 
+          data-bs-target="#carouselExampleIndicators" 
+          data-bs-slide-to="{{loop.index0}}" 
+          class="{% if loop.index == 1 %}active{% endif %}" 
+          aria-current="true" 
+          aria-label="Slide {{loop.index}}"
+        ></button>
+      {% endif %}
+    {% endfor %}
   </div>
   <div class="carousel-inner">
-    {% for a in analysis %}
-      {% if ".svg" in a %}
-        <div class="carousel-item active">
-          <img src="/{{a}}" class="d-block w-100" alt="...">
+    {% for path, name, sweep_selection, version in analysis %}
+      {% if ".svg" in path %}
+        <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+          <a href="#imgModal{{loop.index}}" type="" class="" data-bs-toggle="modal" data-bs-target="#imgModal{{loop.index}}">
+            <img src="/{{path}}" class="d-block w-100" alt="{{path}}">
+          </a>
+          <div class="carousel-caption d-none d-md-block bg-light">
+            <h5>{{name}}</h5>
+            <p>Sweep-selection: {{sweep_selection}}, <i>v: {{version}}</i></p>
+          </div>
         </div>
       {% endif %}
     {% endfor %}
   <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
     <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Previous</span>
+    <span class="visually-hidden text-secondary">Previous</span>
   </button>
   <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
     <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden">Next</span>
+    <span class="visually-hidden text-secondary" >Next</span>
   </button>
 </div>
 {% else %}
   <p>No analysis yet.</p>
 {% endif %}
+
+{% for path, name, sweep_selection, version in analysis %}
+  {% if ".svg" in path %}
+    <div class="modal fade" id="imgModal{{loop.index}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{{name}}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Sweep-selection: {{sweep_selection}}, <i>v: {{version}}</i></p>
+            <!--        include image here-->
+            <img src="/{{path}}" alt="{{path}}" class="img-fluid">
+            <h3>Plugins</h3>
+            <h4>Peaks</h4>
+            <form method="post" action="/handle/analysis/peaks" class="float-end">
+              <input type="hidden" name="path" value="{{path}}">
+              <input type="hidden" name="date" value="{{date}}">
+              <input type="hidden" name="filename" value="{{filename}}">
+              <div class="input-group">
+                <input class="form-control" type="number" name="peak_start" value=0.2 step=0.1>
+                <input class="form-control" type="number" name="peak_step" value=0.1 step=0.1>
+                <input class="form-control" type="number" name="peak_interval" value=0.002 step=0.001>
+                <input class="form-control" type="number" name="peak_num_intervals" value=10>
+                <button type="submit" name="analyze_peaks" class="btn btn-secondary" data-bs-dismiss="modal">Analyse Peaks</button>
+              </div>
+            </form>
+            <p class="font-monospace">{{peaks}}</p>
+          </div>
+          <div class="modal-footer">
+              <form method="post" action="/delete/analysis" class="float-end">
+                <input type="hidden" name="path" value="{{path}}">
+                <input type="hidden" name="date" value="{{date}}">
+                <input type="hidden" name="filename" value="{{filename}}">
+                <button type="submit" name="delete-analysis" class="btn btn-secondary" data-bs-dismiss="modal">Delete</button>
+              </form>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+
 
 {% endblock %}
