@@ -3,6 +3,7 @@ from flask import Flask, flash, render_template, redirect, request, send_from_di
 from service import Service
 from utils import stem
 from extractor.functions import Peaks
+from dotenv import load_dotenv
 
 UPLOAD_FOLDER = 'data/'
 
@@ -129,4 +130,5 @@ def serve_image(date, name, filename):
 
 
 if __name__ == "__main__": 
-    app.run(debug=True)
+    load_dotenv()
+    app.run(debug=True, port=os.getenv('ANA_LZER_PORT'))
