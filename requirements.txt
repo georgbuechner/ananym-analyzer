@@ -24,4 +24,3 @@ scipy==1.10.1
 six==1.16.0
 tzdata==2023.3
 Werkzeug==3.0.1
-git+https://github.com/AnnaBronec/in-vitro_data_analysis@refactoring

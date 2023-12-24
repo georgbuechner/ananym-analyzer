@@ -24,9 +24,32 @@ def data_raw():
 def data_sweeps(): 
     return render_template("data_sweeps.html", data=service.get_sweeps())
 
-@app.route("/data/analysis")
-def data_analysis(): 
-    return render_template("data_analysis.html", data=service.get_analysis())
+@app.route("/data/analysis/", defaults = {"date": "", "file": ""})
+@app.route("/data/analysis/<date>/<file>", methods=["GET", "POST"])
+def analysis(date: str = "", file: str = ""): 
+    if date == "" and file == "": 
+        return render_template("data_analysis.html", data=service.get_analysis())
+    if request.method == 'POST':
+        print(request.form)
+        msg, msg_type = service.do_analysis(
+            date=date, 
+            filename=file, 
+            avrg="avrgCheck" in request.form,
+            start=int(request.form.get("sweep_range"))-1,
+            end=int(request.form.get("sweep_range_to"))
+        )
+        flash(msg, msg_type)
+    filename, name, version = service.split_sweeps_name(file)
+    return render_template(
+        "analysis.html",
+        date=date, 
+        name=name,
+        filename=filename,
+        version=version,
+        analysis=service.get_single_analysis(date, file),
+        num_sweeps=service.num_sweeps(date, file)
+    )
+
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload(): 
@@ -41,29 +64,6 @@ def upload():
             msg, msg_type = service.upload_raw(file, date, extract)
             flash(msg, msg_type)
     return render_template("upload.html")
-
-@app.route("/analysis/<date>/<file>", methods=["GET", "POST"])
-def analysis(date: str, file: str): 
-    if request.method == 'POST':
-        print(request.form)
-        msg, msg_type = service.do_analysis(
-            date=date, 
-            filename=file, 
-            avrg="avrgCheck" in request.form,
-            start=int(request.form.get("sweep_range"))-1,
-            end=int(request.form.get("sweep_range_to"))-1
-        )
-        flash(msg, msg_type)
-    filename, name, version = service.split_sweeps_name(file)
-    return render_template(
-        "analysis.html",
-        date=date, 
-        name=name,
-        filename=filename,
-        version=version,
-        analysis=service.get_single_analysis(date, file),
-        num_sweeps=service.num_sweeps(date, file)
-    )
 
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 
@@ -81,7 +81,7 @@ def handle_sweeps():
     date = request.form.get('dir')
     file = request.form.get("file")
     if "analyze-sweeps" in request.form:
-        return redirect(f"/analysis/{date}/{stem(file)}")
+        return redirect(f"/data/analysis/{date}/{stem(file)}")
     elif "delete-sweeps" in request.form: 
         msg, msg_type = service.delete_data(service.dir_sweeps, date, file)
     flash(msg, msg_type)
@@ -92,7 +92,7 @@ def handle_analysis():
     date = request.form.get('dir')
     file = request.form.get("file")
     if "view-all" in request.form:
-        return redirect(f"/analysis/{date}/{stem(file)}")
+        return redirect(f"/data/analysis/{date}/{stem(file)}")
     elif "delete-all" in request.form: 
         msg, msg_type = service.delete_data(service.dir_analysis, date, file)
     flash(msg, msg_type)
@@ -108,7 +108,6 @@ def analyse_peaks():
     )
     return service.calc_peaks(request.form.get('path'), peaks_info)
 
-
 @app.route("/delete/analysis", methods=["POST"])
 def delete_analysis(): 
     path = request.form.get('path')
@@ -117,10 +116,12 @@ def delete_analysis():
     print(request.form)
     try:
         os.remove(path)
+        os.remove(path.replace("png", "svg"))
+        os.remove(path.replace("png", "json"))
         flash("Successfully deleted analysis.", "success")
     except Exception as e:
         flash(f"Failed: {repr(e)}.", "success")
-    return redirect(f"/analysis/{date}/{filename}")
+    return redirect(f"/data/analysis/{date}/{filename}")
 
 @app.route('/data/analysis/<date>/<name>/<filename>')
 def serve_image(date, name, filename):

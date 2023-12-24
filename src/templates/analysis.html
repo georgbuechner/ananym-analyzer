@@ -12,7 +12,7 @@
 
 <br>
 
-<form action="/analysis/{{date}}/{{filename}}" method="POST">
+<form action="/data/analysis/{{date}}/{{filename}}" method="POST">
   <div class="container-sm form-content">
     <div class="form-group">
       <label for="sweep_range" class="form-label">Select sweeps</label>
@@ -57,7 +57,7 @@
   <div id="carouselExampleIndicators" class="carousel carousel-dark slide" data-bs-ride="carousel">
   <div class="carousel-indicators">
     {% for path, _, _, _ in analysis %}
-      {% if ".svg" in path %}
+      {% if ".png" in path %}
         <button 
           type="button" 
           data-bs-target="#carouselExampleIndicators" 
@@ -71,7 +71,7 @@
   </div>
   <div class="carousel-inner">
     {% for path, name, sweep_selection, version in analysis %}
-      {% if ".svg" in path %}
+      {% if ".png" in path %}
         <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
           <a href="#imgModal{{loop.index}}" type="" class="" data-bs-toggle="modal" data-bs-target="#imgModal{{loop.index}}">
             <img src="/{{path}}" class="d-block w-100" alt="{{path}}">
@@ -97,7 +97,7 @@
 {% endif %}
 
 {% for path, name, sweep_selection, version in analysis %}
-  {% if ".svg" in path %}
+  {% if ".png" in path %}
     <div class="modal fade" id="imgModal{{loop.index}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-scrollable">
         <div class="modal-content">
