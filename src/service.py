@@ -4,9 +4,9 @@ import shutil
 from typing import Dict, List, Tuple
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from extractor.functions import DT, Peaks
-from extractor.preprocessing import convert_rows_to_columns, extract_data
-from extractor.ibw import VERSION, Selection, peaks, plot
+from extractor.functions import Peaks
+from extractor.preprocessing import convert_rows_to_columns, extract_data, join_lists
+from extractor.ibw import VERSION, Selection, peaks, plot_data, get_range
 from utils import ensure_dir_exists, stem
 
 ALLOWED_EXTENSIONS = {'ibw'}
@@ -17,17 +17,25 @@ class Service:
         self.dir_sweeps = os.path.join(upload_folder, "sweeps")
         self.dir_analysis = os.path.join(upload_folder, "analysis")
         self.dir_peaks = os.path.join(upload_folder, "peaks.json")
+        self.dir_map_num_sweeps = os.path.join(upload_folder, "num_sweeps.json")
         self.peaks = {}
-        self.load_peaks()
+        self.map_num_sweeps = {}
+        self.load_data()
 
     def store_peaks(self): 
         with open(self.dir_peaks, "w") as f: 
             json.dump(self.peaks, f)
-        
-    def load_peaks(self): 
+
+    def store_num_sweeps(self): 
+         with open(self.dir_map_num_sweeps, "w") as f: 
+            json.dump(self.peaks, f)
+       
+    def load_data(self): 
         try: 
             with open(self.dir_peaks, "r") as f: 
                 self.peaks = json.load(f)
+            with open(self.dir_map_num_sweeps, "r") as f: 
+                self.map_num_sweeps= json.load(f)
         except Exception: 
             self.peaks = {}
 
@@ -75,7 +83,9 @@ class Service:
         path_to_analysis = os.path.join(self.dir_analysis, date, filename)
         ensure_dir_exists(f"{path_to_analysis}/")
         return [
-            self.split_analysis_name(path_to_analysis, f) for f in os.listdir(path_to_analysis)
+            self.split_analysis_name(path_to_analysis, f) 
+            for f in os.listdir(path_to_analysis) 
+            if ".png" in f 
         ]
 
     def upload_raw(
@@ -145,12 +155,18 @@ class Service:
         )
 
     def num_sweeps(self, date:str, filename: str) -> int:  
+        print("loading num sweeps:")
         path = os.path.join(
             self.dir_sweeps, date, f'{filename}.json'
         )
+        if path in self.map_num_sweeps: 
+            return self.map_num_sweeps[path] 
         with open(path, "r") as f: 
             data = json.load(f)
-            return len(data)
+            num_sweeps = len(data)
+            self.map_num_sweeps[path] = num_sweeps
+            self.store_num_sweeps()
+            return num_sweeps
 
     def do_analysis(
         self, date: str, filename: str, avrg: bool, start: int, end: int
@@ -161,15 +177,17 @@ class Service:
         base_path = os.path.join(
             self.dir_analysis, date, filename, f'{"avrg" if avrg else "inrow"}-{start}-{end}_{filename}'
         )
+        # Load sweeps
         with open(path, "r") as f: 
-            data = json.load(f)
-            time = len(data) * DT
-            if start > end or start < 0 or end > len(data): 
+            sweeps = json.load(f)
+            if start > end or start < 0 or end > len(sweeps): 
                 return ("start or end invalid!", "success")
-            json_data = plot(f"{base_path}.ibw", data, time, Selection(start, end, avrg))
-            print("got json data: ", type(json_data), len(json_data))
+            ranged_sweeps, time = get_range(sweeps, Selection(start, end, avrg))
+            print("Got ranged sweeps: ", len(ranged_sweeps), len(ranged_sweeps[0]))
+            plot_data(f"{base_path}.ibw", join_lists(ranged_sweeps), time)
+            # Store sweep-selection
             with open(f"{base_path}.json", "w") as f: 
-                json.dump(json_data, f)
+                json.dump(ranged_sweeps, f)
         return ("Successfully analysed data!", "success")
 
     def calc_peaks(self, path: str, peaks_info: Peaks) -> Dict[int, Dict]: 
