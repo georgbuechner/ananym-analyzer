@@ -28,9 +28,9 @@
     >
       <div class="accordion-body">
         <ul class="list-group list-group-flush">
-          {% for filename, name in files %}
+          {% for filename, name, tags in files %}
             <li class="list-group-item">
-              <b>{{name}}</b>
+              <b>{{name}}</b> <i>(tags: {{tags | join(', ')}})</i>
               <form method="post" action="/handle/raw" class="float-end">
                 <input type="hidden" name="dir" value="{{dir}}">
                 <input type="hidden" name="file" value="{{filename}}">

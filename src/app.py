@@ -38,13 +38,14 @@ def analysis(date: str = "", file: str = ""):
             end=int(request.form.get("sweep_range_to"))
         )
         flash(msg, msg_type)
-    filename, name, version = service.split_sweeps_name(file)
+    filename, name, version, tags = service.split_sweeps_name(date, file)
     return render_template(
         "analysis.html",
         date=date, 
         name=name,
         filename=filename,
         version=version,
+        tags=', '.join(tags),
         analysis=service.get_single_analysis(date, file),
         num_sweeps=service.num_sweeps(date, file)
     )
@@ -57,12 +58,15 @@ def upload():
         if 'igorFile' not in request.files:
             flash('No file part', 'danger')
         else:
+            print(request.form)
             file = request.files['igorFile']
             date = request.form.get("creationDate");
+            tags = request.form.get("tags");
+            print(tags)
             extract = "unpackIgorCheck" in request.form
-            msg, msg_type = service.upload_raw(file, date, extract)
+            msg, msg_type = service.upload_raw(file, date, extract, tags)
             flash(msg, msg_type)
-    return render_template("upload.html")
+    return render_template("upload.html", all_tags=service.all_tags)
 
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 
