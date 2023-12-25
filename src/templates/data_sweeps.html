@@ -28,9 +28,9 @@
     >
       <div class="accordion-body">
         <ul class="list-group list-group-flush">
-          {% for filename, name, version in files %}
+          {% for filename, name, version, tags in files %}
             <li class="list-group-item">
-              <b>{{name}}</b> <i>(v: {{version}})</i>
+              <b>{{name}}</b> <i>(v: {{version}}, tags: {{tags|join(', ')}})</i>
               <form method="post" action="/handle/sweeps" class="float-end">
                 <input type="hidden" name="dir" value="{{dir}}">
                 <input type="hidden" name="file" value="{{filename}}">

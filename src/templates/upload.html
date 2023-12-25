@@ -8,6 +8,22 @@
       <label for="creationDate" class="form-label">Creation Date</label>
       <input type="date" class="form-control" id="creationDate" name="creationDate">
     </div>
+    <label for="inpTag" class="form-label">Datalist example</label>
+    <div class="input-group mb-3">
+      <input class="form-control" list="datalistOptions" id="inpTag" placeholder="Type to search...">
+      <button 
+        class="btn btn-outline-secondary" 
+        type="button" 
+        id="button-addon1"
+        onclick="AddTag();"
+      >Add</button>
+      <input class="form-control" id="tags" name="tags">
+      <datalist id="datalistOptions">
+        {% for tag in all_tags %}
+          <option value="{{tag}}">
+        {% endfor %}
+      </datalist>
+    </div>
     <div>
       <input class="form-control form-control-lg" id="igorFile" name="igorFile" type="file">
     </div>
