@@ -50,3 +50,8 @@ h1 {
 .indicators {
   background-color: #ff0101 !important;
 }
+
+.inline-btn {
+  background-color: transparent;
+  border: none;
+}

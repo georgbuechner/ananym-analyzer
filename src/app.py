@@ -18,7 +18,10 @@ def main():
 
 @app.route("/data/raw")
 def data_raw(): 
-    return render_template("data_raw.html", data=service.get_raw())
+    print("ALL TAGS: ", service.all_tags)
+    return render_template(
+        "data_raw.html", data=service.get_raw(), all_tags=service.all_tags
+    )
 
 @app.route("/data/sweeps")
 def data_sweeps(): 
@@ -59,11 +62,9 @@ def upload():
         if 'igorFile' not in request.files:
             flash('No file part', 'danger')
         else:
-            print(request.form)
             file = request.files['igorFile']
             date = request.form.get("creationDate");
             tags = request.form.get("tags");
-            print(tags)
             extract = "unpackIgorCheck" in request.form
             msg, msg_type = service.upload_raw(file, date, extract, tags)
             flash(msg, msg_type)
@@ -126,6 +127,24 @@ def delete_analysis():
     except Exception as e:
         flash(f"Failed: {repr(e)}.", "success")
     return redirect(f"/data/analysis/{date}/{filename}")
+
+@app.route("/tags/update/", methods=["POST"])
+def add_tag(): 
+    print(request.form)
+    path = stem(request.form.get('path'))
+    print("PATH: ", path)
+    tag = request.form.get('tag')
+    service.add_tag_to_entry(path, tag)
+    return "", 200
+
+@app.route("/tags/remove/", methods=["POST"])
+def remove_tag(): 
+    print(request.form)
+    path = stem(request.form.get('path'))
+    tag = request.form.get('tag')
+    service.remove_tag_from_entry(path, tag)
+    return "", 200
+
 
 @app.route('/data/analysis/<date>/<name>/<filename>')
 def serve_image(date, name, filename):

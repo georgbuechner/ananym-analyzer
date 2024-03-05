@@ -26,6 +26,7 @@ class Service:
         self.map_num_sweeps = {}
         self.all_tags = []
         self.tags = {}
+        print("loading tags: ", self.all_tags)
         self.load_data()
 
     def store_peaks(self): 
@@ -41,8 +42,12 @@ class Service:
             json.dump(self.tags, f)
          with open(self.dir_all_tags, "w") as f: 
             json.dump(self.all_tags, f)
+            print("lOaded tags: ", self.all_tags)
 
     def add_tag_to_entry(self, path, tag): 
+        # If tag already exists for entry, do nothing
+        if path in self.tags and tag in self.tags[path]: 
+            return
         # Add tag if not exists
         if tag not in self.all_tags: 
             self.all_tags.append(tag) 
@@ -52,19 +57,21 @@ class Service:
         else: 
             self.tags[path] = [tag]
         self.store_tags()
+
+    def remove_tag_from_entry(self, path, tag): 
+        if path in self.tags: 
+            if tag in self.tags[path]: 
+                self.tags[path].remove(tag)
       
     def load_data(self): 
-        try: 
-            with open(self.dir_peaks, "r") as f: 
-                self.peaks = json.load(f)
-            with open(self.dir_map_num_sweeps, "r") as f: 
-                self.map_num_sweeps= json.load(f)
-            with open(self.dir_tags, "r") as f: 
-                self.tags = json.load(f)
-            with open(self.dir_all_tags, "r") as f: 
-                self.all_tags = json.load(f)
-        except Exception: 
-            self.peaks = {}
+        with open(self.dir_peaks, "r") as f: 
+            self.peaks = json.load(f)
+        with open(self.dir_map_num_sweeps, "r") as f: 
+            self.map_num_sweeps= json.load(f)
+        with open(self.dir_tags, "r") as f: 
+            self.tags = json.load(f)
+        with open(self.dir_all_tags, "r") as f: 
+            self.all_tags = json.load(f)
 
     def get_raw(self) -> Dict[str, List[Tuple[str, str]]]: 
         raw_data = {}
@@ -84,7 +91,7 @@ class Service:
                 continue
             relative_path = os.path.relpath(dirpath, self.dir_sweeps)
             raw_data[relative_path] = [
-                self.split_sweeps_name(relative_path, f) for f in filenames
+                self.split_sweeps_name(relative_path, stem(f)) for f in filenames
             ]
         return raw_data
 
@@ -236,10 +243,13 @@ class Service:
     def __get_tags(self, date: str, filename: str) -> List[str]: 
         tags = []
         base_id = os.path.join(date, filename)
+        print("base_id: ", base_id)
+        print("self.tags: ", self.tags)
         if base_id in self.tags: 
             for tag in self.tags[base_id]:
                 if tag not in tags: 
                     tags.append(tag)
+        print("found: ", tags)
         return tags
 
 

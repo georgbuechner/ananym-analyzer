@@ -30,7 +30,26 @@
         <ul class="list-group list-group-flush">
           {% for filename, name, tags in files %}
             <li class="list-group-item">
-              <b>{{name}}</b> <i>(tags: {{tags | join(', ')}})</i>
+              <b>{{name}}</b> <i>(tags:</i>
+                {% for tag in tags %} 
+                  <span class="badge bg-primary">
+                    {{tag}}
+                    <button 
+                      title="Remove tag: {{tag}}"
+                      type="button" 
+                      onclick="RemoveTagFromPath('{{dir}}/{{filename}}', '{{tag}}');" 
+                      class="inline-btn"
+                    >X</button> 
+                  </span>
+                {% endfor %}
+                <button 
+                  type="button" 
+                  onclick="InitAddTagModal('{{dir}}/{{filename}}');" 
+                  class="btn btn-sm btn-light" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#tag_modal"
+                >+</button>
+              )
               <form method="post" action="/handle/raw" class="float-end">
                 <input type="hidden" name="dir" value="{{dir}}">
                 <input type="hidden" name="file" value="{{filename}}">
@@ -49,5 +68,7 @@
   </div>
   {% endfor %}
 </ol>
+
+  {% include "add_tag_modal.html" %}
 
 {% endblock %}

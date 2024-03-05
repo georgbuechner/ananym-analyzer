@@ -6,3 +6,27 @@ function AddTag() {
   else 
     tags.value += ", " + tag;
 }
+
+function InitAddTagModal(path) {
+  document.getElementById("tag_modal_path").value = path;
+}
+
+function AddTagToPath() {
+  let formData = new FormData();
+  formData.append("path", document.getElementById("tag_modal_path").value);
+  formData.append("tag", document.getElementById("inp_new_tag").value);
+  fetch("/tags/update/", {method: "POST", body: formData})
+    .then(_ => window.location.reload())
+    .catch(error => alert(error));
+
+}
+
+function RemoveTagFromPath(path, tag) {
+  let formData = new FormData();
+  formData.append("path", path);
+  formData.append("tag", tag);
+  fetch("/tags/remove/", {method: "POST", body: formData})
+    .then(_ => window.location.reload())
+    .catch(error => alert(error));
+
+}

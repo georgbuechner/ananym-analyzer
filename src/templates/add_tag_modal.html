@@ -1,0 +1,30 @@
+<div class="modal fade" id="tag_modal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Add Tag</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form method="post" action="" class="float-end">
+          <input id="tag_modal_path" type="hidden" name="path" value="">
+          <div class="input-group mb-3">
+            <input class="form-control" list="datalistOptions" id="inp_new_tag" placeholder="Type to search...">
+            <button 
+              class="btn btn-outline-secondary" 
+              type="button" 
+              id="button-addon1"
+              onclick="AddTagToPath();"
+            >Add</button>
+            <datalist id="datalistOptions">
+              {% for tag in all_tags %}
+                <option value="{{tag}}">
+              {% endfor %}
+            </datalist>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+

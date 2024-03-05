@@ -30,7 +30,13 @@
         <ul class="list-group list-group-flush">
           {% for filename, name, version, tags in files %}
             <li class="list-group-item">
-              <b>{{name}}</b> <i>(v: {{version}}, tags: {{tags|join(', ')}})</i>
+              <b>{{name}}</b> <i>(v: {{version}}, tags:</i>
+                {% for tag in tags %} 
+                  <span class="badge bg-primary">
+                    {{tag}}
+                  </span>
+                {% endfor %}
+              )
               <form method="post" action="/handle/sweeps" class="float-end">
                 <input type="hidden" name="dir" value="{{dir}}">
                 <input type="hidden" name="file" value="{{filename}}">
