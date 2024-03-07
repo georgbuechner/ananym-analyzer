@@ -234,6 +234,9 @@ class Service:
             ranged_sweeps, time = get_range(sweeps, Selection(start, end, avrg))
             if not use_all:
                 plot_data(f"{base_path}.ibw", join_lists(ranged_sweeps), len(ranged_sweeps)*time)
+                # Store sweep-selection
+                with open(f"{base_path}.json", "w") as f: 
+                    json.dump(ranged_sweeps, f)
             else: 
                 for index, sweep in enumerate(ranged_sweeps):
                     base_path = os.path.join(
@@ -242,12 +245,13 @@ class Service:
                     plot_data(f"{base_path}.ibw", sweep, time)
                     # Store sweep-selection
                     with open(f"{base_path}.json", "w") as f: 
-                        json.dump(sweep, f)
+                        json.dump([sweep], f)
         return ("Successfully analysed data!", "success")
 
     def calc_peaks(self, path: str, peaks_info: Peaks) -> Dict[int, Dict]: 
-        base_path = path.replace(".svg", ".json")
+        base_path = path.replace(".svg" if "svg" in path else ".png", ".json")
         data_id = os.path.basename(base_path).replace(".json", ".peaks")
+        print("Loading data: ", base_path)
         with open(base_path, "r") as f: 
             data = json.load(f)
             peak_data = peaks(data, peaks_info)
