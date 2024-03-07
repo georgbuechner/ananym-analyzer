@@ -25,7 +25,9 @@ def data_raw():
 
 @app.route("/data/sweeps")
 def data_sweeps(): 
-    return render_template("data_sweeps.html", data=service.get_sweeps())
+    return render_template(
+        "data_sweeps.html", data=service.get_sweeps(), all_tags=service.all_tags
+    )
 
 @app.route("/data/analysis/", defaults = {"date": "", "file": ""})
 @app.route("/data/analysis/<date>/<file>", methods=["GET", "POST"])
@@ -49,7 +51,8 @@ def analysis(date: str = "", file: str = ""):
         name=name,
         filename=filename,
         version=version,
-        tags=', '.join(tags),
+        tags=tags,
+        all_tags=service.all_tags,
         analysis=service.get_single_analysis(date, file),
         num_sweeps=service.num_sweeps(date, file)
     )

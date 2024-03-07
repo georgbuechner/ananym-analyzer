@@ -181,7 +181,7 @@ class Service:
     ) -> Tuple[str, str, str, List[str]]: 
         name = filename.split("_")[1]
         version = filename.split("_")[0]
-        tags = self.__get_tags(date, name)
+        tags = self.__get_tags(date, name, filename)
         return filename, name, version, tags
 
     def split_analysis_name(self, path: str, name: str) -> Tuple[str, str, str, str]: 
@@ -240,15 +240,18 @@ class Service:
             self.peaks[data_id] = peak_data
             return peak_data
 
-    def __get_tags(self, date: str, filename: str) -> List[str]: 
+    def __get_tags(
+        self, date: str, filename: str, name: str = ""
+    ) -> List[Tuple[str, int]]:
         tags = []
         base_id = os.path.join(date, filename)
-        print("base_id: ", base_id)
-        print("self.tags: ", self.tags)
-        if base_id in self.tags: 
-            for tag in self.tags[base_id]:
-                if tag not in tags: 
-                    tags.append(tag)
+        joined_id = os.path.join(base_id, name)
+        print("Checking: ", base_id, joined_id)
+        for id in [base_id, joined_id]:
+            if id in self.tags: 
+                for tag in self.tags[id]:
+                    if tag not in tags: 
+                        tags.append((tag, id==base_id))
         print("found: ", tags)
         return tags
 

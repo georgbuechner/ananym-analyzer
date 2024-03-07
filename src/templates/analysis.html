@@ -6,7 +6,29 @@
     <p><b>{{date}} {{name}}</b></p>
   </blockquote>
   <figcaption class="blockquote-footer">
-    <i>v: {{version}}, tags: {{tags}}</i>
+    <i>v: {{version}}, tags: 
+      {% for tag, c in tags %} 
+        <span class="badge bg-{{'primary' if c else 'info'}}">
+          {{tag}}
+          {% if not c %} 
+            <button 
+              title="Remove tag: {{tag}}"
+              type="button" 
+              onclick="RemoveTagFromPath('{{date}}/{{name}}/{{filename}}', '{{tag}}');" 
+              class="inline-btn"
+            >X</button> 
+          {% endif %} 
+        </span>
+      {% endfor %}
+      <button 
+        type="button" 
+        onclick="InitAddTagModal('{{date}}/{{name}}/{{filename}}');" 
+        class="btn btn-sm btn-light" 
+        data-bs-toggle="modal" 
+        data-bs-target="#tag_modal"
+      >+</button>
+
+    </i>
   </figcaption>
 </figure>
 
@@ -140,5 +162,6 @@
   {% endif %}
 {% endfor %}
 
+  {% include "add_tag_modal.html" %}
 
 {% endblock %}

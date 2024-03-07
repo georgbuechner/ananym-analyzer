@@ -31,7 +31,7 @@
           {% for filename, name, tags in files %}
             <li class="list-group-item">
               <b>{{name}}</b> <i>(tags:</i>
-                {% for tag in tags %} 
+                {% for tag, _ in tags %} 
                   <span class="badge bg-primary">
                     {{tag}}
                     <button 

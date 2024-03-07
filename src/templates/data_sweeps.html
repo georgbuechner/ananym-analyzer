@@ -31,8 +31,8 @@
           {% for filename, name, version, tags in files %}
             <li class="list-group-item">
               <b>{{name}}</b> <i>(v: {{version}}, tags:</i>
-                {% for tag in tags %} 
-                  <span class="badge bg-primary">
+                {% for tag, c in tags %} 
+                  <span class="badge bg-{{'primary' if c else 'info'}}">
                     {{tag}}
                   </span>
                 {% endfor %}
@@ -55,5 +55,7 @@
   </div>
   {% endfor %}
 </ol>
+
+  {% include "add_tag_modal.html" %}
 
 {% endblock %}
