@@ -237,7 +237,7 @@ class Service:
             else: 
                 for index, sweep in enumerate(ranged_sweeps):
                     base_path = os.path.join(
-                        self.dir_analysis, date, filename, f'sweep-{index}_{filename}'
+                        self.dir_analysis, date, filename, f'sweep-{str(index).zfill(2)}_{filename}'
                     )
                     plot_data(f"{base_path}.ibw", sweep, time)
                     # Store sweep-selection
