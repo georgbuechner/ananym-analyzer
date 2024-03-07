@@ -68,6 +68,10 @@
       <input type="checkbox" class="form-check-input" id="arvgCheck" name="avrgCheck">
       <label class="form-check-label" for="unpackIgorCheck">Average</label>
     </div>
+    <div class="mb-3 form-check">
+      <input type="checkbox" class="form-check-input" id="allCheck" name="allCheck">
+      <label class="form-check-label" for="unpackIgorCheck">All</label>
+    </div>
   </div>
   <button type="submit" class="btn btn-primary">Analyze</button>
 </form>
@@ -98,7 +102,8 @@
           <a href="#imgModal{{loop.index}}" type="" class="" data-bs-toggle="modal" data-bs-target="#imgModal{{loop.index}}">
             <img src="/{{path}}" class="d-block w-100" alt="{{path}}">
           </a>
-          <div class="carousel-caption d-none d-md-block bg-light">
+          <div class="carousel-caption d-none d-md-block bg-light"
+            style="background-color: rgba(255,255,255,0.8) !important;">
             <h5>{{name}}</h5>
             <p>Sweep-selection: {{sweep_selection}}, <i>v: {{version}}</i></p>
           </div>

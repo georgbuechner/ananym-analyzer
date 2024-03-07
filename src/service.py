@@ -116,11 +116,17 @@ class Service:
         """
         path_to_analysis = os.path.join(self.dir_analysis, date, filename)
         ensure_dir_exists(f"{path_to_analysis}/")
-        return [
+        analysis_data = [
             self.split_analysis_name(path_to_analysis, f) 
             for f in os.listdir(path_to_analysis) 
             if ".png" in f 
         ]
+        def get_selection(elem: Tuple[str, str, str, str]): 
+            print(elem[2])
+            return elem[2]
+        analysis_data.sort(key=get_selection)
+        return analysis_data
+
 
     def upload_raw(
         self, file: FileStorage, date: str, extract: bool, tags: str
@@ -210,8 +216,10 @@ class Service:
             return num_sweeps
 
     def do_analysis(
-        self, date: str, filename: str, avrg: bool, start: int, end: int
+        self, date: str, filename: str, avrg: bool, use_all: bool, start: int, end: int
     ) -> Tuple[str, str]: 
+        if avrg and use_all: 
+            return ("Can't use 'avrg' and 'all' at the same time!", "danger")
         path = os.path.join(
             self.dir_sweeps, date, f'{filename}.json'
         )
@@ -224,11 +232,17 @@ class Service:
             if start > end or start < 0 or end > len(sweeps): 
                 return ("start or end invalid!", "success")
             ranged_sweeps, time = get_range(sweeps, Selection(start, end, avrg))
-            print("Got ranged sweeps: ", len(ranged_sweeps), len(ranged_sweeps[0]))
-            plot_data(f"{base_path}.ibw", join_lists(ranged_sweeps), time)
-            # Store sweep-selection
-            with open(f"{base_path}.json", "w") as f: 
-                json.dump(ranged_sweeps, f)
+            if not use_all:
+                plot_data(f"{base_path}.ibw", join_lists(ranged_sweeps), len(ranged_sweeps)*time)
+            else: 
+                for index, sweep in enumerate(ranged_sweeps):
+                    base_path = os.path.join(
+                        self.dir_analysis, date, filename, f'sweep-{index}_{filename}'
+                    )
+                    plot_data(f"{base_path}.ibw", sweep, time)
+                    # Store sweep-selection
+                    with open(f"{base_path}.json", "w") as f: 
+                        json.dump(sweep, f)
         return ("Successfully analysed data!", "success")
 
     def calc_peaks(self, path: str, peaks_info: Peaks) -> Dict[int, Dict]: 

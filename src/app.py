@@ -40,6 +40,7 @@ def analysis(date: str = "", file: str = ""):
             date=date, 
             filename=file, 
             avrg="avrgCheck" in request.form,
+            use_all="allCheck" in request.form,
             start=int(request.form.get("sweep_range"))-1,
             end=int(request.form.get("sweep_range_to"))
         )
