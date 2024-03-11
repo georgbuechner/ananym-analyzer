@@ -27,17 +27,17 @@
     >
       <div class="accordion-body">
         <ul class="list-group list-group-flush">
-          {% for filename, name, version, tags in files %}
+          {% for sweep in files %}
             <li class="list-group-item">
-              <b>{{name}}</b> <i>(v: {{version}}, tags:</i>
-                {% for tag, c in tags %} 
-                  <span class="badge bg-{{'primary' if c else 'info'}}">
-                    {{tag}}
-                    {% if not c %} 
+              <b>{{sweep.name}}</b> <i>(v: {{sweep.version}}, tags:</i>
+                {% for tag in sweep.tags %} 
+                  <span class="badge bg-{{'primary' if tag.raw else 'info'}}">
+                    {{tag.name}}
+                    {% if not tag.raw %} 
                       <button 
-                        title="Remove tag: {{tag}}"
+                        title="Remove tag: {{tag.name}}"
                         type="button" 
-                        onclick="RemoveTagFromPath('{{dir}}/{{name}}/{{filename}}', '{{tag}}');" 
+                        onclick="RemoveTagFromPath('{{dir}}/{{sweep.name}}/{{sweep.filename}}', '{{tag.name}}');" 
                         class="inline-btn"
                       >X</button> 
                     {% endif %} 
@@ -45,7 +45,7 @@
                 {% endfor %}
                 <button 
                   type="button" 
-                  onclick="InitAddTagModal('{{dir}}/{{name}}/{{filename}}');" 
+                  onclick="InitAddTagModal('{{dir}}/{{sweep.name}}/{{sweep.filename}}');" 
                   class="btn btn-sm btn-light" 
                   data-bs-toggle="modal" 
                   data-bs-target="#tag_modal"
@@ -53,7 +53,7 @@
               )
               <form method="post" action="/handle/analysis" class="float-end">
                 <input type="hidden" name="dir" value="{{dir}}">
-                <input type="hidden" name="file" value="{{filename}}">
+                <input type="hidden" name="file" value="{{sweep.filename}}">
                 <button type="submit" name="delete-all" value="" class="link-button">
                   Delete All
                 </button>

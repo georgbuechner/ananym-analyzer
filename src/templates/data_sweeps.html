@@ -6,7 +6,7 @@
 
 
 <div class="accordion" id="accordionRawData">
-  {% for dir, files in data.items() %}
+  {% for dir, sweeps in data.items() %}
   <div class="accordion-item">
     <h2 class="accordion-header" id="heading{{loop.index}}">
       <button 
@@ -28,18 +28,18 @@
     >
       <div class="accordion-body">
         <ul class="list-group list-group-flush">
-          {% for filename, name, version, tags in files %}
+          {% for sweep in sweeps %}
             <li class="list-group-item">
-              <b>{{name}}</b> <i>(v: {{version}}, tags:</i>
-                {% for tag, c in tags %} 
-                  <span class="badge bg-{{'primary' if c else 'info'}}">
-                    {{tag}}
+              <b>{{sweep.name}}</b> <i>(v: {{sweep.version}}, tags:</i>
+                {% for tag in sweep.tags %} 
+                  <span class="badge bg-{{'primary' if tag.raw else 'info'}}">
+                    {{tag.name}}
                   </span>
                 {% endfor %}
               )
               <form method="post" action="/handle/sweeps" class="float-end">
                 <input type="hidden" name="dir" value="{{dir}}">
-                <input type="hidden" name="file" value="{{filename}}">
+                <input type="hidden" name="file" value="{{sweep.filename}}">
                 <button type="submit" name="delete-sweeps" value="" class="link-button">
                   Delete
                 </button>

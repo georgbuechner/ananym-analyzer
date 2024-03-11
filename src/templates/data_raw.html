@@ -6,7 +6,7 @@
 
 
 <div class="accordion" id="accordionRawData">
-  {% for dir, files in data.items() %}
+  {% for dir, raw_data in data.items() %}
   <div class="accordion-item">
     <h2 class="accordion-header" id="heading{{loop.index}}">
       <button 
@@ -28,23 +28,23 @@
     >
       <div class="accordion-body">
         <ul class="list-group list-group-flush">
-          {% for filename, name, tags in files %}
+          {% for raw in raw_data %}
             <li class="list-group-item">
-              <b>{{name}}</b> <i>(tags:</i>
-                {% for tag, _ in tags %} 
+              <b>{{raw.name}}</b> <i>(tags:</i>
+                {% for tag in raw.tags %} 
                   <span class="badge bg-primary">
-                    {{tag}}
+                    {{tag.name}}
                     <button 
-                      title="Remove tag: {{tag}}"
+                      title="Remove tag: {{tag.name}}"
                       type="button" 
-                      onclick="RemoveTagFromPath('{{dir}}/{{filename}}', '{{tag}}');" 
+                      onclick="RemoveTagFromPath('{{dir}}/{{raw.filename}}', '{{tag.name}}');" 
                       class="inline-btn"
                     >X</button> 
                   </span>
                 {% endfor %}
                 <button 
                   type="button" 
-                  onclick="InitAddTagModal('{{dir}}/{{filename}}');" 
+                  onclick="InitAddTagModal('{{dir}}/{{raw.filename}}');" 
                   class="btn btn-sm btn-light" 
                   data-bs-toggle="modal" 
                   data-bs-target="#tag_modal"
@@ -52,7 +52,7 @@
               )
               <form method="post" action="/handle/raw" class="float-end">
                 <input type="hidden" name="dir" value="{{dir}}">
-                <input type="hidden" name="file" value="{{filename}}">
+                <input type="hidden" name="file" value="{{raw.filename}}">
                 <button type="submit" name="delete-raw-data" value="" class="link-button">
                   Delete
                 </button>

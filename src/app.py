@@ -1,5 +1,6 @@
 import os
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
+from dmodels import Sweep
 from service import Service
 from utils import stem
 from extractor.functions import Peaks
@@ -18,15 +19,19 @@ def main():
 
 @app.route("/data/raw")
 def data_raw(): 
-    print("ALL TAGS: ", service.all_tags)
+    print("ALL TAGS: ", service.dmanager.all_tags)
     return render_template(
-        "data_raw.html", data=service.get_raw(), all_tags=service.all_tags
+        "data_raw.html", 
+        data=service.get_raw(), 
+        all_tags=service.dmanager.all_tags
     )
 
 @app.route("/data/sweeps")
 def data_sweeps(): 
     return render_template(
-        "data_sweeps.html", data=service.get_sweeps(), all_tags=service.all_tags
+        "data_sweeps.html", 
+        data=service.get_sweeps(), 
+        all_tags=service.dmanager.all_tags
     )
 
 @app.route("/data/analysis/", defaults = {"date": "", "file": ""})
@@ -45,15 +50,15 @@ def analysis(date: str = "", file: str = ""):
             end=int(request.form.get("sweep_range_to"))
         )
         flash(msg, msg_type)
-    filename, name, version, tags = service.split_sweeps_name(date, file)
+    sweep = Sweep(service.dmanager, date, file)
     return render_template(
         "analysis.html",
         date=date, 
-        name=name,
-        filename=filename,
-        version=version,
-        tags=tags,
-        all_tags=service.all_tags,
+        name=sweep.name,
+        filename=sweep.filename,
+        version=sweep.version,
+        tags=sweep.tags,
+        all_tags=service.dmanager.all_tags,
         analysis=service.get_single_analysis(date, file),
         num_sweeps=service.num_sweeps(date, file)
     )
@@ -72,7 +77,7 @@ def upload():
             extract = "unpackIgorCheck" in request.form
             msg, msg_type = service.upload_raw(file, date, extract, tags)
             flash(msg, msg_type)
-    return render_template("upload.html", all_tags=service.all_tags)
+    return render_template("upload.html", all_tags=service.dmanager.all_tags)
 
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 
@@ -115,7 +120,22 @@ def analyse_peaks():
         interval=float(request.form["peak_interval"]), 
         num_intervals=int(request.form["peak_num_intervals"])
     )
-    return service.calc_peaks(request.form.get('path'), peaks_info)
+    date = request.form.get("date")
+    filename = request.form.get("filename")
+    _ = service.calc_peaks(request.form.get('path'), peaks_info)
+    sweep = Sweep(service.dmanager, date, filename)
+    return render_template(
+        "analysis.html",
+        date=date, 
+        name=sweep.name,
+        filename=sweep.filename,
+        version=sweep.version,
+        tags=sweep.tags,
+        all_tags=service.dmanager.all_tags,
+        analysis=service.get_single_analysis(date, filename),
+        num_sweeps=service.num_sweeps(date, filename)
+    )
+
 
 @app.route("/delete/analysis", methods=["POST"])
 def delete_analysis(): 
@@ -155,6 +175,15 @@ def serve_image(date, name, filename):
     # Specify the path to the directory where your images are stored
     image_directory = os.path.abspath(os.path.join(service.dir_analysis, date, name))
     return send_from_directory(image_directory, filename)
+
+@app.route('/data/analysis/<date>/<name>/<plug_dir>/<plugin>/<sweep>')
+def serve_image_plug(date, name, plug_dir, plugin, sweep):
+    # Specify the path to the directory where your images are stored
+    image_directory = os.path.abspath(
+        os.path.join(service.dir_analysis, date, name, plug_dir, plugin)
+    )
+    print("Got img dir: ", image_directory)
+    return send_from_directory(image_directory, sweep)
 
 
 if __name__ == "__main__": 

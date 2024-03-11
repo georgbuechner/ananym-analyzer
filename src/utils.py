@@ -4,6 +4,7 @@ from PIL import Image
 def ensure_dir_exists(path: str) -> None: 
     directory = os.path.dirname(path)
     if not os.path.exists(directory): 
+        print("Creating dirs: ", path, directory)
         os.makedirs(directory) 
 
 # def reduze_file_size(path: str) -> None: 
