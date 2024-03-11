@@ -134,14 +134,22 @@
           <div class="modal-body">
             <p>Sweep-selection: {{a.selection}}, <i>v: {{a.version}}</i></p>
             <!--        include image here-->
-            <img src="/{{a.path}}" alt="{{a.path}}" class="img-fluid">
+            <a download="{{a.name}}" href="/{{a.path | replace(".png", ".svg")}}" title="{{a.name}}">
+              <img src="/{{a.path}}" alt="{{a.path}}" class="img-fluid">
+            </a>
 
             <h3>Plugin Data</h3> 
             {% for plugin_name, plug_data in a.plug.items() %}
               <h4>{{plugin_name}}</h4>
               {% for sweep, data in plug_data.data.items() %} 
                 <h5>Sweep {{sweep|int +1}}</h5>
-                <img src="/{{plug_data.path_to_plot}}/{{loop.index0}}.png" alt="sweep {{loop.index}}" class="img-fluid">
+                <a 
+                  href="/{{plug_data.path_to_plot}}/{{loop.index0}}.svg"
+                  title="{{a.name}}_{{plugin_name}}_{{loop.index}}"
+                  download="{{a.name}}_{{plugin_name}}_{{loop.index}}.svg"
+                >
+                  <img src="/{{plug_data.path_to_plot}}/{{loop.index0}}.png" alt="sweep {{loop.index}}" class="img-fluid">
+                </a>
                 <table class="table center">
                   {% for row in data %} 
                     {% set outer_loop = loop %}
