@@ -147,7 +147,7 @@ class Service:
             return self.dmanager.map_num_sweeps[path] 
         with open(path, "r") as f: 
             data = json.load(f)
-            return self.dmanager(path, len(data))
+            return self.dmanager.add_num_sweeps(path, len(data))
 
     def do_analysis(
         self, date: str, filename: str, avrg: bool, use_all: bool, start: int, end: int
