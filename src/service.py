@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 from typing import Dict, List, OrderedDict, Tuple
 from werkzeug.datastructures import FileStorage
@@ -213,12 +214,22 @@ def _allowed_file(filename):
 
 def _sort_raws(raws: List[Raw]) -> List[Raw]: 
     def get_key(raw: Raw) -> str: 
-        return raw.filename 
+        return _get_key_num(raw.filename)
     raws.sort(key=get_key) 
     return raws
 
 def _sort_sweeps(sweeps: List[Sweep]) -> List[Sweep]: 
     def get_key(sweep: Sweep) -> str: 
-        return sweep.name 
+        return _get_key_num(sweep.name)
     sweeps.sort(key=get_key) 
     return sweeps
+
+def _get_key_num(name: str) -> str: 
+    try:
+        re_str = r"\S(\d\d?)\S*"
+        m = re.search(re_str, name) 
+        print("Found: ", m.group(1).rjust(3, "0"))
+        return m.group(1).rjust(3, "0")
+    except Exception as err: 
+        print("Failed to get num from {name}: {repr(err)}")
+        return name
