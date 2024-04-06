@@ -61,3 +61,15 @@ h1 {
   margin-left: auto;
   text-align: left;
 }
+
+.favorite {
+  color:orange;
+}
+
+.nobutton {;
+  background-color: inherit;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+	outline: inherit;
+}

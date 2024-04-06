@@ -132,7 +132,10 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <p>Sweep-selection: {{a.selection}}, <i>v: {{a.version}}</i></p>
+            <p>Sweep-selection: {{a.selection}}, 
+              <i>v: {{a.version}}</i> 
+              <button onclick="Favorite(this);" class="nobutton">&#10058;</button>
+            </p>
             <!--        include image here-->
             <a download="{{a.name}}" href="/{{a.path | replace(".png", ".svg")}}" title="{{a.name}}">
               <img src="/{{a.path}}" alt="{{a.path}}" class="img-fluid">
