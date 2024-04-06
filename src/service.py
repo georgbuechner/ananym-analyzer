@@ -1,7 +1,7 @@
 import json
 import os
 import shutil
-from typing import Dict, List, Tuple
+from typing import Dict, List, OrderedDict, Tuple
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from dmanager import DManager
@@ -46,10 +46,10 @@ class Service:
             if dirpath == self.dir_raw: 
                 continue
             relative_path = os.path.relpath(dirpath, self.dir_raw)
-            raw_data[relative_path] = [ 
-                Raw(self.dmanager, relative_path, f) for f in filenames
-            ]
-        return raw_data 
+            raw_data[relative_path] = _sort_raws(
+                [Raw(self.dmanager, relative_path, f) for f in filenames]
+            )
+        return OrderedDict(sorted(raw_data.items()))
 
     def get_sweeps(self) -> Dict[str, List[Sweep]]: 
         raw_data = {}
@@ -57,10 +57,10 @@ class Service:
             if dirpath == self.dir_sweeps: 
                 continue
             relative_path = os.path.relpath(dirpath, self.dir_sweeps)
-            raw_data[relative_path] = [
-                Sweep(self.dmanager, relative_path, stem(f)) for f in filenames
-            ]
-        return raw_data
+            raw_data[relative_path] = _sort_sweeps(
+                [Sweep(self.dmanager, relative_path, stem(f)) for f in filenames]
+            )
+        return OrderedDict(sorted(raw_data.items()))
 
     def get_analysis(self) -> Dict[str, List[Sweep]]:  
         raw_data = {}
@@ -68,10 +68,10 @@ class Service:
             if dirpath == self.dir_analysis or "_sweeps" in dirpath:
                 continue
             relative_path = os.path.relpath(dirpath, self.dir_analysis)
-            raw_data[relative_path] = [
-                Sweep(self.dmanager, relative_path, f) for f in dirs 
-            ]
-        return raw_data 
+            raw_data[relative_path] = _sort_sweeps(
+                [Sweep(self.dmanager, relative_path, f) for f in dirs]
+            )
+        return OrderedDict(sorted(raw_data.items()))
 
     def get_single_analysis(self, date: str, filename: str) -> List[Analysis]:
         path = os.path.join(self.dir_analysis, date, filename)
@@ -210,3 +210,15 @@ def _allowed_file(filename):
     print(filename, filename.rsplit('.', 1)[1].lower())
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def _sort_raws(raws: List[Raw]) -> List[Raw]: 
+    def get_key(raw: Raw) -> str: 
+        return raw.filename 
+    raws.sort(key=get_key) 
+    return raws
+
+def _sort_sweeps(sweeps: List[Sweep]) -> List[Sweep]: 
+    def get_key(sweep: Sweep) -> str: 
+        return sweep.name 
+    sweeps.sort(key=get_key) 
+    return sweeps
