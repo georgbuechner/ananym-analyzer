@@ -8,11 +8,13 @@ class DManager:
         self.dir_map_num_sweeps = os.path.join(upload_folder, "num_sweeps.json")
         self.dir_tags = os.path.join(upload_folder, "tags.json")
         self.dir_all_tags = os.path.join(upload_folder, "all_tags.json")
+        self.dir_favorites = os.path.join(upload_folder, "favorites.json")
         # Database fields
         self.peaks = {}
         self.map_num_sweeps = {}
         self.all_tags = []
         self.tags = {}
+        self.favorites = {}
         print("loading tags: ", self.all_tags)
         self.load_data()
 
@@ -40,10 +42,20 @@ class DManager:
             self.tags = json.load(f)
         with open(self.dir_all_tags, "r") as f: 
             self.all_tags = json.load(f)
+        with open(self.dir_favorites, "r") as f: 
+            self.favorites = json.load(f)
     
     def add_num_sweeps(self, path: str, num_sweeps: int) -> int: 
         self.map_num_sweeps[path] = num_sweeps
         self.store_num_sweeps()
         return num_sweeps
 
+    def add_favorite(self, name: str): 
+        self.favorites[name] = True
+        with open(self.dir_favorites, "w") as f: 
+            json.dump(self.favorites, f)
 
+    def del_favorite(self, name: str):
+        del self.favorites[name]
+        with open(self.dir_favorites, "w") as f: 
+            json.dump(self.favorites, f)

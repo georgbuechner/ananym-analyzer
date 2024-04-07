@@ -109,15 +109,20 @@
         </div>
       {% endif %}
     {% endfor %}
-  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
-    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-    <span class="visually-hidden text-secondary">Previous</span>
-  </button>
-  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
-    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-    <span class="visually-hidden text-secondary" >Next</span>
-  </button>
-</div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden text-secondary">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden text-secondary" >Next</span>
+    </button>
+  </div>
+  <button 
+    onclick="ShowOnlyFavorites();" 
+    class="nobutton {{"favorite" if request.args.get("only_favorites") else ""}}"
+  >&#10058;</button>
+
 {% else %}
   <p>No analysis yet.</p>
 {% endif %}
@@ -134,7 +139,10 @@
           <div class="modal-body">
             <p>Sweep-selection: {{a.selection}}, 
               <i>v: {{a.version}}</i> 
-              <button onclick="Favorite(this);" class="nobutton">&#10058;</button>
+              <button 
+                onclick="Favorite(this, '{{a.path}}');" 
+                class="nobutton {{"favorite" if a.path in favorites else ""}}"
+              >&#10058;</button>
             </p>
             <!--        include image here-->
             <a download="{{a.name}}" href="/{{a.path | replace(".png", ".svg")}}" title="{{a.name}}">

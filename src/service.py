@@ -74,11 +74,15 @@ class Service:
             )
         return OrderedDict(sorted(raw_data.items()))
 
-    def get_single_analysis(self, date: str, filename: str) -> List[Analysis]:
+    def get_single_analysis(
+        self, date: str, filename: str, only_favorites: bool
+    ) -> List[Analysis]:
         path = os.path.join(self.dir_analysis, date, filename)
         ensure_dir_exists(f"{path}/")
+        favorites = self.dmanager.favorites
         analysis_data = [
-            Analysis(path, f) for f in os.listdir(path) if ".png" in f
+            Analysis(path, f) for f in os.listdir(path) 
+            if ".png" in f and (not only_favorites or os.path.join(path, f) in favorites)
         ]
         # Sort by selection
         def get_selection(elem: Analysis): 

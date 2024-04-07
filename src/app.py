@@ -51,6 +51,7 @@ def analysis(date: str = "", file: str = ""):
         )
         flash(msg, msg_type)
     sweep = Sweep(service.dmanager, date, file)
+    only_favorites = request.args.get("only_favorites") == "True" or False
     return render_template(
         "analysis.html",
         date=date, 
@@ -59,8 +60,11 @@ def analysis(date: str = "", file: str = ""):
         version=sweep.version,
         tags=sweep.tags,
         all_tags=service.dmanager.all_tags,
-        analysis=service.get_single_analysis(date, file),
-        num_sweeps=service.num_sweeps(date, file)
+        analysis=service.get_single_analysis(
+            date, file, only_favorites=only_favorites
+        ),
+        num_sweeps=service.num_sweeps(date, file),
+        favorites = service.dmanager.favorites
     )
 
 
@@ -185,6 +189,17 @@ def serve_image_plug(date, name, plug_dir, plugin, sweep):
     print("Got img dir: ", image_directory)
     return send_from_directory(image_directory, sweep)
 
+@app.route('/api/favorites/add/<path:path>', methods=["POST"])
+def api_add_favorite(path: str):
+    # Specify the path to the directory where your images are stored
+    service.dmanager.add_favorite(path)
+    return "", 200
+
+@app.route('/api/favorites/remove/<path:path>', methods=["POST"])
+def api_del_favorite(path: str):
+    # Specify the path to the directory where your images are stored
+    service.dmanager.del_favorite(path)
+    return "", 200
 
 if __name__ == "__main__": 
     load_dotenv()
