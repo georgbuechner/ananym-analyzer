@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 from dmanager import DManager
 from utils import stem
-from typing import List, Tuple
+from typing import List
 
 @dataclass
 class Tag: 
@@ -47,7 +47,7 @@ class PluginData:
 
 def get_tags(
     dmanager: DManager, date: str, filename: str, name: str = ""
-) -> List[Tuple[Tag]]:
+) -> List[Tag]:
     tags = []
     raw_id = os.path.join(date, filename)
     analysis_id = os.path.join(raw_id, name)
@@ -56,6 +56,5 @@ def get_tags(
             for tag in dmanager.tags[tag_type]:
                 if tag not in tags: 
                     tags.append(Tag(tag, tag_type==raw_id))
+    tags.sort(key=(lambda x: x.name))
     return tags
-
-

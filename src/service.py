@@ -47,32 +47,32 @@ class Service:
             if dirpath == self.dir_raw: 
                 continue
             relative_path = os.path.relpath(dirpath, self.dir_raw)
-            raw_data[relative_path] = _sort_raws(
-                [Raw(self.dmanager, relative_path, f) for f in filenames]
-            )
+            raws = [Raw(self.dmanager, relative_path, f) for f in filenames]
+            raws.sort(key=(lambda x: _get_key_num(x.filename)))
+            raw_data[relative_path] = raws
         return OrderedDict(sorted(raw_data.items()))
 
     def get_sweeps(self) -> Dict[str, List[Sweep]]: 
-        raw_data = {}
+        sweeps_data = {}
         for dirpath, _, filenames in os.walk(self.dir_sweeps):
             if dirpath == self.dir_sweeps: 
                 continue
             relative_path = os.path.relpath(dirpath, self.dir_sweeps)
-            raw_data[relative_path] = _sort_sweeps(
-                [Sweep(self.dmanager, relative_path, stem(f)) for f in filenames]
-            )
-        return OrderedDict(sorted(raw_data.items()))
+            sweeps = [Sweep(self.dmanager, relative_path, stem(f)) for f in filenames]
+            sweeps.sort(key=(lambda x: _get_key_num(x.name)))
+            sweeps_data[relative_path] = sweeps
+        return OrderedDict(sorted(sweeps_data.items()))
 
     def get_analysis(self) -> Dict[str, List[Sweep]]:  
-        raw_data = {}
+        sweeps_data = {}
         for dirpath, dirs, _ in os.walk(self.dir_analysis):
             if dirpath == self.dir_analysis or "_sweeps" in dirpath:
                 continue
             relative_path = os.path.relpath(dirpath, self.dir_analysis)
-            raw_data[relative_path] = _sort_sweeps(
-                [Sweep(self.dmanager, relative_path, f) for f in dirs]
-            )
-        return OrderedDict(sorted(raw_data.items()))
+            sweeps = [Sweep(self.dmanager, relative_path, f) for f in dirs]
+            sweeps.sort(key=(lambda x: _get_key_num(x.name)))
+            sweeps_data[relative_path] = sweeps
+        return OrderedDict(sorted(sweeps_data.items()))
 
     def get_single_analysis(
         self, date: str, filename: str, only_favorites: bool
@@ -215,18 +215,6 @@ def _allowed_file(filename):
     print(filename, filename.rsplit('.', 1)[1].lower())
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-def _sort_raws(raws: List[Raw]) -> List[Raw]: 
-    def get_key(raw: Raw) -> str: 
-        return _get_key_num(raw.filename)
-    raws.sort(key=get_key) 
-    return raws
-
-def _sort_sweeps(sweeps: List[Sweep]) -> List[Sweep]: 
-    def get_key(sweep: Sweep) -> str: 
-        return _get_key_num(sweep.name)
-    sweeps.sort(key=get_key) 
-    return sweeps
 
 def _get_key_num(name: str) -> str: 
     try:
