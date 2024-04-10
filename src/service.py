@@ -74,6 +74,15 @@ class Service:
             sweeps_data[relative_path] = sweeps
         return OrderedDict(sorted(sweeps_data.items()))
 
+    def get_raw_searched(self, tags: str) -> Dict[str, List[Raw]]: 
+        raw_data = self.get_raw() 
+        for tag in [t for t in tags.split(";") if len(t) > 0]: 
+            reduced = {} 
+            for date, raws in raw_data.items(): 
+                reduced[date] = [raw for raw in raws if raw.tags_match(tag)]
+            raw_data = reduced
+        return {date:raws for date, raws in raw_data.items() if len(raws) > 0}
+
     def get_single_analysis(
         self, date: str, filename: str, only_favorites: bool
     ) -> List[Analysis]:

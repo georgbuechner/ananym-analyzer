@@ -1,6 +1,6 @@
 import os
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
-from dmodels import Sweep
+from dmodels import Sweep, get_tags
 from service import Service
 from utils import stem
 from extractor.functions import Peaks
@@ -19,9 +19,8 @@ def main():
 
 @app.route("/data/raw")
 def data_raw(): 
-    print("ALL TAGS: ", service.dmanager.all_tags)
     return render_template(
-        "data_raw.html", 
+        "data/raw.html", 
         data=service.get_raw(), 
         all_tags=service.dmanager.all_tags
     )
@@ -29,7 +28,7 @@ def data_raw():
 @app.route("/data/sweeps")
 def data_sweeps(): 
     return render_template(
-        "data_sweeps.html", 
+        "data/sweeps.html", 
         data=service.get_sweeps(), 
         all_tags=service.dmanager.all_tags
     )
@@ -38,7 +37,7 @@ def data_sweeps():
 @app.route("/data/analysis/<date>/<file>", methods=["GET", "POST"])
 def analysis(date: str = "", file: str = ""): 
     if date == "" and file == "": 
-        return render_template("data_analysis.html", data=service.get_analysis())
+        return render_template("data/analysis.html", data=service.get_analysis())
     if request.method == 'POST':
         print(request.form)
         msg, msg_type = service.do_analysis(
@@ -53,7 +52,7 @@ def analysis(date: str = "", file: str = ""):
     sweep = Sweep(service.dmanager, date, file)
     only_favorites = request.args.get("only_favorites") == "True" or False
     return render_template(
-        "analysis.html",
+        "analysis/analysis.html",
         date=date, 
         name=sweep.name,
         filename=sweep.filename,
@@ -81,7 +80,7 @@ def upload():
             extract = "unpackIgorCheck" in request.form
             msg, msg_type = service.upload_raw(file, date, extract, tags)
             flash(msg, msg_type)
-    return render_template("upload.html", all_tags=service.dmanager.all_tags)
+    return render_template("upload/upload.html", all_tags=service.dmanager.all_tags)
 
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 
@@ -129,7 +128,7 @@ def analyse_peaks():
     _ = service.calc_peaks(request.form.get('path'), peaks_info)
     sweep = Sweep(service.dmanager, date, filename)
     return render_template(
-        "analysis.html",
+        "analysis/analysis.html",
         date=date, 
         name=sweep.name,
         filename=sweep.filename,
@@ -200,6 +199,21 @@ def api_del_favorite(path: str):
     # Specify the path to the directory where your images are stored
     service.dmanager.del_favorite(path)
     return "", 200
+
+@app.route("/api/search/raw/", defaults = {"tags":""})
+@app.route("/api/search/raw/<tags>")
+def search_raw(tags: str): 
+    if len(tags) > 0: 
+        data = service.get_raw_searched(tags)
+    else: 
+        data = service.get_raw()
+    return render_template(
+        "data/raw_content.html", 
+        data=data, 
+        all_tags=service.dmanager.all_tags,
+        collapsed=tags==""
+    )
+
 
 if __name__ == "__main__": 
     load_dotenv()

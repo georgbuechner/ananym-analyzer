@@ -73,3 +73,8 @@ h1 {
 	cursor: pointer;
 	outline: inherit;
 }
+
+.search_bar {
+  width: 50%;
+  margin: auto;
+}

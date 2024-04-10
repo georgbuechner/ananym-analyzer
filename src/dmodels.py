@@ -17,6 +17,12 @@ class Raw:
         self.name = stem(filename) 
         self.tags = get_tags(dmanager, path, self.name)
 
+    def tags_match(self, tag: str) -> bool: 
+        for t in self.tags: 
+            if tag in t.name: 
+                return True 
+        return False
+
 class Sweep: 
     def __init__(self, dmanager: DManager, date: str, filename: str) -> None:
         self.filename = filename
