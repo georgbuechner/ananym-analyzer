@@ -1,0 +1,25 @@
+<!doctype html>
+{% extends "layout/layout.html" %}
+{% block body %}
+
+  <h1>Raw Data</h1>
+  
+  <input 
+    type="text" 
+    class="form-control search_bar" 
+    id="search_bar" 
+    placeholder="search tags (split with ';', partial matching ok)"
+    oninput="SearchRaw(this.value);"
+    autofocus
+    onfocus="this.value=''"
+  >
+  <br>
+
+  <div class="accordion" id="accordionRawData"> 
+    {% set collapsed=true %}
+    {% include"data/raw_content.html" %}
+  </div>
+
+  {% include "shared/add_tag_modal.html" %}
+
+{% endblock %}

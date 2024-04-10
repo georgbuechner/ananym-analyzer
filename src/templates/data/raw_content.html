@@ -1,0 +1,62 @@
+  {% for dir, raw_data in data.items() %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{loop.index}}">
+      <button 
+        class="accordion-button {{ 'collapsed' if collapsed else ''}}" 
+        type="button" 
+        data-bs-toggle="collapse"
+        data-bs-target="#collapse{{loop.index}}" 
+        aria-expanded="{{ 'true' if collapsed else 'false'}}" 
+        aria-controls="collapse{{loop.index}}"
+      >
+        {{dir}}
+      </button>
+    </h2>
+    <div 
+      id="collapse{{loop.index}}" 
+      class="accordion-collapse collapse {{ '' if collapsed else 'show'}}" 
+      aria-labelledby="heading{{loop.index}}" 
+      data-bs-parent="#accordionRawData"
+    >
+      <div class="accordion-body">
+        <ul class="list-group list-group-flush" style="text-align: left;">
+          {% for raw in raw_data %}
+            <li class="list-group-item">
+              <b>{{raw.name}}</b> <i>(tags:</i>
+                {% for tag in raw.tags %} 
+                  <span class="badge bg-primary">
+                    {{tag.name}}
+                    <button 
+                      title="Remove tag: {{tag.name}}"
+                      type="button" 
+                      onclick="RemoveTagFromPath('{{dir}}/{{raw.filename}}', '{{tag.name}}');" 
+                      class="inline-btn"
+                    >X</button> 
+                  </span>
+                {% endfor %}
+                <button 
+                  type="button" 
+                  onclick="InitAddTagModal('{{dir}}/{{raw.filename}}');" 
+                  class="btn btn-sm btn-light" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#tag_modal"
+                >+</button>
+              )
+              <form method="post" action="/handle/raw" class="float-end">
+                <input type="hidden" name="dir" value="{{dir}}">
+                <input type="hidden" name="file" value="{{raw.filename}}">
+                <button type="submit" name="delete-raw-data" value="" class="link-button">
+                  Delete
+                </button>
+                <button type="submit" name="unpack-raw-data" value="" class="link-button">
+                  Unpack
+                </button>
+              </form>
+            </i>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
