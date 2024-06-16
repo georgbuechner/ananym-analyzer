@@ -65,19 +65,28 @@
     </div>
     <div class="mb-3 form-check">
       <input type="checkbox" class="form-check-input" id="arvgCheck" name="avrgCheck">
-      <label class="form-check-label" for="unpackIgorCheck">Average</label>
+      <label class="form-check-label" for="arvgCheck">Average</label>
     </div>
     <div class="mb-3 form-check">
       <input type="checkbox" class="form-check-input" id="allCheck" name="allCheck">
-      <label class="form-check-label" for="unpackIgorCheck">All</label>
+      <label class="form-check-label" for="allCheck">All</label>
     </div>
+    <div class="mb-3 form-check">
+      <input type="number" class="form-input" id="ylim_min" name="ylim_min">
+      <label class="form-label" for="ylim_min">Y-Axis Min</label>
+    </div>
+    <div class="mb-3 form-check">
+      <input type="number" class="form-input" id="ylim_max" name="ylim_max">
+      <label class="form-label" for="ylim_max">Y-Axis Max</label>
+    </div>
+
   </div>
   <button type="submit" class="btn btn-primary">Analyze</button>
 </form>
 
 <br><br>
 
-<h4>Analysis</h4>
+<h4>Analysis ({{analysis|length}})</h4>
 {% if analysis %}
   <div id="carouselExampleIndicators" class="carousel carousel-dark slide" data-bs-ride="carousel">
   <div class="carousel-indicators">

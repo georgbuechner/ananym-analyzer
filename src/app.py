@@ -40,13 +40,20 @@ def analysis(date: str = "", file: str = ""):
         return render_template("data/analysis.html", data=service.get_analysis())
     if request.method == 'POST':
         print(request.form)
+        try: 
+            ylim = (
+                float(request.form.get("ylim_min")), float(request.form.get("ylim_max"))
+            )
+        except: 
+            ylim = None 
         msg, msg_type = service.do_analysis(
             date=date, 
             filename=file, 
             avrg="avrgCheck" in request.form,
             use_all="allCheck" in request.form,
             start=int(request.form.get("sweep_range"))-1,
-            end=int(request.form.get("sweep_range_to"))
+            end=int(request.form.get("sweep_range_to")),
+            ylim=ylim,
         )
         flash(msg, msg_type)
     sweep = Sweep(service.dmanager, date, file)
