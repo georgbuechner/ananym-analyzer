@@ -30,6 +30,12 @@ class Sweep:
         self.version = filename.split("_")[0]
         self.tags = get_tags(dmanager, date, self.name, filename)
 
+    def tags_match(self, tag: str) -> bool: 
+        for t in self.tags: 
+            if tag in t.name: 
+                return True 
+        return False
+
 class Analysis: 
     def __init__(self, path: str, name: str) -> None:
         self.path = os.path.join(path, name)

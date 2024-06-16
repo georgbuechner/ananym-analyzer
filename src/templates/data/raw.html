@@ -4,15 +4,9 @@
 
   <h1>Raw Data</h1>
   
-  <input 
-    type="text" 
-    class="form-control search_bar" 
-    id="search_bar" 
-    placeholder="search tags (split with ';', partial matching ok)"
-    oninput="SearchRaw(this.value);"
-    autofocus
-    onfocus="this.value=''"
-  >
+  {% set search_location = 'raw' %}
+  {% include "shared/search_bar.html" %}
+
   <br>
 
   <div class="accordion" id="accordionRawData"> 
