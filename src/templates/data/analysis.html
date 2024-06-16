@@ -4,72 +4,16 @@
 
 <h1>Analysis</h1>
 
-<div class="accordion" id="accordionRawData">
-  {% for dir, files in data.items() %}
-  <div class="accordion-item">
-    <h2 class="accordion-header" id="heading{{loop.index}}">
-      <button 
-        class="accordion-button collapsed" 
-        type="button" 
-        data-bs-toggle="collapse"
-        data-bs-target="#collapse{{loop.index}}" 
-        aria-expanded="true" 
-        aria-controls="collapse{{loop.index}}"
-      >
-        {{dir}}
-      </button>
-    </h2>
-    <div 
-      id="collapse{{loop.index}}" 
-      class="accordion-collapse collapse" 
-      aria-labelledby="heading{{loop.index}}" 
-      data-bs-parent="#accordionRawData"
-    >
-      <div class="accordion-body">
-        <ul class="list-group list-group-flush">
-          {% for sweep in files %}
-            <li class="list-group-item">
-              <b>{{sweep.name}}</b> <i>(v: {{sweep.version}}, tags:</i>
-                {% for tag in sweep.tags %} 
-                  <span class="badge bg-{{'primary' if tag.raw else 'info'}}">
-                    {{tag.name}}
-                    {% if not tag.raw %} 
-                      <button 
-                        title="Remove tag: {{tag.name}}"
-                        type="button" 
-                        onclick="RemoveTagFromPath('{{dir}}/{{sweep.name}}/{{sweep.filename}}', '{{tag.name}}');" 
-                        class="inline-btn"
-                      >X</button> 
-                    {% endif %} 
-                  </span>
-                {% endfor %}
-                <button 
-                  type="button" 
-                  onclick="InitAddTagModal('{{dir}}/{{sweep.name}}/{{sweep.filename}}');" 
-                  class="btn btn-sm btn-light" 
-                  data-bs-toggle="modal" 
-                  data-bs-target="#tag_modal"
-                >+</button>
-              )
-              <form method="post" action="/handle/analysis" class="float-end">
-                <input type="hidden" name="dir" value="{{dir}}">
-                <input type="hidden" name="file" value="{{sweep.filename}}">
-                <button type="submit" name="delete-all" value="" class="link-button">
-                  Delete All
-                </button>
-                <button type="submit" name="view-all" value="" class="link-button">
-                  View
-                </button>
-              </form>
-            </i>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-  </div>
-  {% endfor %}
-</ol>
+{% set search_location = 'analysis' %}
+{% include "shared/search_bar.html" %}
 
-  {% include "shared/add_tag_modal.html" %}
+<br>
+
+<div class="accordion" id="accordionRawData">
+    {% set collapsed=true %}
+    {% include"data/analysis_content.html" %}
+</div>
+
+{% include "shared/add_tag_modal.html" %}
 
 {% endblock %}

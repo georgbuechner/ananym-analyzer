@@ -1,8 +1,9 @@
+from collections.abc import Callable
 import json
 import os
 import re
 import shutil
-from typing import Dict, List, OrderedDict, Tuple
+from typing import Any, Dict, List, OrderedDict, Tuple
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from dmanager import DManager
@@ -13,7 +14,10 @@ from extractor.preprocessing import convert_rows_to_columns, extract_data, join_
 from extractor.ibw import VERSION, Selection, peaks, get_range
 from utils import ensure_dir_exists, stem
 
+type Data = Dict[str, List[Raw|Sweep]]
+
 ALLOWED_EXTENSIONS = {'ibw'}
+
 
 class Service: 
     def __init__(self, upload_folder) -> None:
@@ -74,14 +78,14 @@ class Service:
             sweeps_data[relative_path] = sweeps
         return OrderedDict(sorted(sweeps_data.items()))
 
-    def get_raw_searched(self, tags: str) -> Dict[str, List[Raw]]: 
-        raw_data = self.get_raw() 
+    def get_searched(self, get_data_func: Callable[[], Data], tags: str) -> Data: 
+        data = get_data_func()
         for tag in [t for t in tags.split(";") if len(t) > 0]: 
             reduced = {} 
-            for date, raws in raw_data.items(): 
-                reduced[date] = [raw for raw in raws if raw.tags_match(tag)]
-            raw_data = reduced
-        return {date:raws for date, raws in raw_data.items() if len(raws) > 0}
+            for date, xs in data.items(): 
+                reduced[date] = [x for x in xs if x.tags_match(tag)]
+            data = reduced
+        return {date:xs for date, xs in data.items() if len(xs) > 0}
 
     def get_single_analysis(
         self, date: str, filename: str, only_favorites: bool

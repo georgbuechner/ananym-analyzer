@@ -1,7 +1,7 @@
 import os
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
 from dmodels import Sweep, get_tags
-from service import Service
+from service import Service, Data
 from utils import stem
 from extractor.functions import Peaks
 from dotenv import load_dotenv
@@ -200,20 +200,24 @@ def api_del_favorite(path: str):
     service.dmanager.del_favorite(path)
     return "", 200
 
-@app.route("/api/search/raw/", defaults = {"tags":""})
-@app.route("/api/search/raw/<tags>")
-def search_raw(tags: str): 
+@app.route("/api/search/<location>/", defaults = {"tags":""})
+@app.route("/api/search/<location>/<tags>")
+def search(location: str, tags: str): 
+    get_data_funcs = {
+        "raw": service.get_raw, 
+        "sweeps": service.get_sweeps, 
+        "analysis": service.get_analysis
+    }
     if len(tags) > 0: 
-        data = service.get_raw_searched(tags)
+        data = service.get_searched(get_data_funcs[location], tags)
     else: 
-        data = service.get_raw()
+        data = get_data_funcs[location]()
     return render_template(
-        "data/raw_content.html", 
+        f"data/{location}_content.html", 
         data=data, 
         all_tags=service.dmanager.all_tags,
         collapsed=tags==""
     )
-
 
 if __name__ == "__main__": 
     load_dotenv()
