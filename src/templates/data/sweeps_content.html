@@ -1,0 +1,49 @@
+{% for dir, sweeps in data.items() %}
+  <div class="accordion-item">
+    <h2 class="accordion-header" id="heading{{loop.index}}">
+      <button 
+        class="accordion-button {{ 'collapsed' if collapsed else ''}}" 
+        type="button" 
+        data-bs-toggle="collapse"
+        data-bs-target="#collapse{{loop.index}}" 
+        aria-expanded="{{ 'true' if collapsed else 'false'}}" 
+        aria-controls="collapse{{loop.index}}"
+      >
+        {{dir}}
+      </button>
+    </h2>
+    <div 
+      id="collapse{{loop.index}}" 
+      class="accordion-collapse collapse {{ '' if collapsed else 'show'}}" 
+      aria-labelledby="heading{{loop.index}}" 
+      data-bs-parent="#accordionRawData"
+    >
+      <div class="accordion-body">
+        <ul class="list-group list-group-flush" style="text-align: left;">
+          {% for sweep in sweeps %}
+            <li class="list-group-item">
+              <b>{{sweep.name}}</b> <i>(v: {{sweep.version}}, tags:</i>
+                {% for tag in sweep.tags %} 
+                  <span class="badge bg-{{'primary' if tag.raw else 'info'}}">
+                    {{tag.name}}
+                  </span>
+                {% endfor %}
+              )
+              <form method="post" action="/handle/sweeps" class="float-end">
+                <input type="hidden" name="dir" value="{{dir}}">
+                <input type="hidden" name="file" value="{{sweep.filename}}">
+                <button type="submit" name="delete-sweeps" value="" class="link-button">
+                  Delete
+                </button>
+                <button type="submit" name="analyze-sweeps" value="" class="link-button">
+                  Analyse
+                </button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  </div>
+{% endfor %}
+
