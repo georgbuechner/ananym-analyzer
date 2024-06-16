@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 from typing import Any, Dict, List, OrderedDict, Tuple
+from matplotlib.pyplot import ylim
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from dmanager import DManager
@@ -168,7 +169,14 @@ class Service:
             return self.dmanager.add_num_sweeps(path, len(data))
 
     def do_analysis(
-        self, date: str, filename: str, avrg: bool, use_all: bool, start: int, end: int
+        self, 
+        date: str, 
+        filename: str, 
+        avrg: bool, 
+        use_all: bool, 
+        start: int,
+        end: int, 
+        ylim: Tuple[float, float], 
     ) -> Tuple[str, str]: 
         if avrg and use_all: 
             return ("Can't use 'avrg' and 'all' at the same time!", "danger")
@@ -185,7 +193,12 @@ class Service:
                 return ("start or end invalid!", "success")
             ranged_sweeps, time = get_range(sweeps, Selection(start, end, avrg))
             if not use_all:
-                plot_data(f"{base_path}.ibw", join_lists(ranged_sweeps), len(ranged_sweeps)*time)
+                plot_data(
+                    f"{base_path}.ibw", 
+                    join_lists(ranged_sweeps),
+                    len(ranged_sweeps)*time, 
+                    ylim=ylim
+                )
                 # Store sweep-selection
                 with open(f"{base_path}.json", "w") as f: 
                     json.dump(ranged_sweeps, f)
@@ -194,7 +207,7 @@ class Service:
                     base_path = os.path.join(
                         self.dir_analysis, date, filename, f'sweep-{str(index).zfill(2)}_{filename}'
                     )
-                    plot_data(f"{base_path}.ibw", sweep, time)
+                    plot_data(f"{base_path}.ibw", sweep, time, ylim=ylim)
                     # Store sweep-selection
                     with open(f"{base_path}.json", "w") as f: 
                         json.dump([sweep], f)
