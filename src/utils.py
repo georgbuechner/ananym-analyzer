@@ -1,4 +1,5 @@
-import os 
+import os
+from re import A
 
 def ensure_dir_exists(path: str) -> None: 
     directory = os.path.dirname(path)

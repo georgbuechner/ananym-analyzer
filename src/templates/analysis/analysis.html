@@ -63,22 +63,16 @@
 
       </div>
     </div>
-    <div class="mb-3 form-check">
-      <input type="checkbox" class="form-check-input" id="arvgCheck" name="avrgCheck">
-      <label class="form-check-label" for="arvgCheck">Average</label>
-    </div>
-    <div class="mb-3 form-check">
-      <input type="checkbox" class="form-check-input" id="allCheck" name="allCheck">
-      <label class="form-check-label" for="allCheck">All</label>
-    </div>
-    <div class="mb-3 form-check">
-      <input type="number" class="form-input" id="ylim_min" name="ylim_min">
-      <label class="form-label" for="ylim_min">Y-Axis Min</label>
-    </div>
-    <div class="mb-3 form-check">
-      <input type="number" class="form-input" id="ylim_max" name="ylim_max">
-      <label class="form-label" for="ylim_max">Y-Axis Max</label>
-    </div>
+    <select class="form-select" id="opt" name="opt" aria-label="Default select example">
+      <option value="1" selected>single</option>
+      <option value="2">avrg</option>
+      <option value="3">inrow</option>
+      <option value="4">stacked</option>
+    </select>
+    <input type="number" class="form-input" id="ylim_min" name="ylim_min">
+    <label class="form-label" for="ylim_min">Y-Axis Min</label>
+    <input type="number" class="form-input" id="ylim_max" name="ylim_max">
+    <label class="form-label" for="ylim_max">Y-Axis Max</label>
 
   </div>
   <button type="submit" class="btn btn-primary">Analyze</button>

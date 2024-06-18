@@ -3,12 +3,11 @@ import json
 import os
 import re
 import shutil
-from typing import Any, Dict, List, OrderedDict, Tuple
-from matplotlib.pyplot import ylim
+from typing import Dict, List, OrderedDict, Tuple
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from dmanager import DManager
-from dmodels import Analysis, Sweep, Raw
+from dmodels import Analysis, Sweep, Raw, AnalysisOpts
 from extractor.functions import Peaks
 from extractor.plotting import plot_data
 from extractor.preprocessing import convert_rows_to_columns, extract_data, join_lists
@@ -172,45 +171,43 @@ class Service:
         self, 
         date: str, 
         filename: str, 
-        avrg: bool, 
-        use_all: bool, 
+        opt: AnalysisOpts,
         start: int,
         end: int, 
         ylim: Tuple[float, float], 
     ) -> Tuple[str, str]: 
-        if avrg and use_all: 
-            return ("Can't use 'avrg' and 'all' at the same time!", "danger")
         path = os.path.join(
             self.dir_sweeps, date, f'{filename}.json'
         )
-        base_path = os.path.join(
-            self.dir_analysis, date, filename, f'{"avrg" if avrg else "inrow"}-{start}-{end}_{filename}'
-        )
+        base_path = self._create_analysis_path(date, filename, opt, start, end)
+        print("GOT base_path:", base_path)
         # Load sweeps
         with open(path, "r") as f: 
-            sweeps = json.load(f)
-            if start > end or start < 0 or end > len(sweeps): 
-                return ("start or end invalid!", "success")
-            ranged_sweeps, time = get_range(sweeps, Selection(start, end, avrg))
-            if not use_all:
-                plot_data(
-                    f"{base_path}.ibw", 
-                    join_lists(ranged_sweeps),
-                    len(ranged_sweeps)*time, 
-                    ylim=ylim
-                )
+            all_sweeps = json.load(f)
+        # Get sweeps in specified range 
+        if start > end or start < 0 or end > len(all_sweeps): 
+            return ("start or end invalid!", "success")
+        sweeps, time = get_range(
+            all_sweeps, Selection(start, end, opt==AnalysisOpts.AVRG)
+        )
+        if opt == AnalysisOpts.AVRG or opt == AnalysisOpts.INROW:
+            print("Doing AVRG/INROW:")
+            plot_data(
+                f"{base_path}.ibw", join_lists(sweeps), len(sweeps)*time, ylim=ylim
+            )
+            # Store sweep-selection
+            with open(f"{base_path}.json", "w") as f: 
+                json.dump(sweeps, f)
+        elif opt == AnalysisOpts.ALL: 
+            print("Doing ALL")
+            for index, sweep in enumerate(sweeps):
+                sweep_path = base_path.replace("XX", str(index).zfill(2))
+                plot_data(f"{sweep_path}.ibw", sweep, time, ylim=ylim)
                 # Store sweep-selection
-                with open(f"{base_path}.json", "w") as f: 
-                    json.dump(ranged_sweeps, f)
-            else: 
-                for index, sweep in enumerate(ranged_sweeps):
-                    base_path = os.path.join(
-                        self.dir_analysis, date, filename, f'sweep-{str(index).zfill(2)}_{filename}'
-                    )
-                    plot_data(f"{base_path}.ibw", sweep, time, ylim=ylim)
-                    # Store sweep-selection
-                    with open(f"{base_path}.json", "w") as f: 
-                        json.dump([sweep], f)
+                with open(f"{sweep_path}.json", "w") as f: 
+                    json.dump([sweep], f)
+        elif opt == AnalysisOpts.STACKED: 
+            plot_data(f"{base_path}.ibw", sweeps, time, ylim=ylim)
         return ("Successfully analysed data!", "success")
 
     def calc_peaks(self, path: str, peaks_info: Peaks) -> Dict[int, Dict]: 
@@ -235,6 +232,19 @@ class Service:
             with open(os.path.join(plugin_path, "data.json"), "w") as f: 
                 json.dump(reduced, f)
             return reduced
+
+    def _create_analysis_path(
+        self, date: str, filename: str, opt: AnalysisOpts, start: int, end: int
+    ) -> str: 
+        if opt == AnalysisOpts.ALL: 
+            name = f"sweep-XX_{filename}"
+        elif opt == AnalysisOpts.AVRG:
+            name = f'avrg-{start}-{end}_{filename}'
+        elif opt == AnalysisOpts.INROW:
+            name = f'inrow-{start}-{end}_{filename}'
+        else: 
+            name = f'stacked-{start}-{end}_{filename}'
+        return os.path.join(self.dir_analysis, date, filename, name)
 
 
 def _allowed_file(filename):
