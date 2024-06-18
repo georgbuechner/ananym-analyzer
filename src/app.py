@@ -1,6 +1,6 @@
 import os
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
-from dmodels import Sweep, get_tags
+from dmodels import AnalysisOpts, Sweep, get_tags
 from service import Service, Data
 from utils import stem
 from extractor.functions import Peaks
@@ -49,8 +49,7 @@ def analysis(date: str = "", file: str = ""):
         msg, msg_type = service.do_analysis(
             date=date, 
             filename=file, 
-            avrg="avrgCheck" in request.form,
-            use_all="allCheck" in request.form,
+            opt=AnalysisOpts(int(request.form.get("opt") or 1)),
             start=int(request.form.get("sweep_range"))-1,
             end=int(request.form.get("sweep_range_to")),
             ylim=ylim,
@@ -134,6 +133,7 @@ def analyse_peaks():
     filename = request.form.get("filename")
     _ = service.calc_peaks(request.form.get('path'), peaks_info)
     sweep = Sweep(service.dmanager, date, filename)
+    only_favorites = request.args.get("only_favorites") == "True" or False
     return render_template(
         "analysis/analysis.html",
         date=date, 
@@ -142,7 +142,9 @@ def analyse_peaks():
         version=sweep.version,
         tags=sweep.tags,
         all_tags=service.dmanager.all_tags,
-        analysis=service.get_single_analysis(date, filename),
+        analysis=service.get_single_analysis(
+            date, filename, only_favorites=only_favorites
+        ),
         num_sweeps=service.num_sweeps(date, filename)
     )
 
