@@ -1,7 +1,10 @@
 import os
+import urllib.parse
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
-from dmodels import AnalysisOpts, Sweep, get_tags
-from service import Service, Data
+from dmanager.dmanager import DManager
+from dmanager.dmodels import AnalysisOpts
+from dmanager.models import Sweep
+from service import Service
 from utils import stem
 from extractor.functions import Peaks
 from dotenv import load_dotenv
@@ -69,7 +72,9 @@ def analysis(date: str = "", file: str = ""):
             date, file, only_favorites=only_favorites
         ),
         num_sweeps=service.num_sweeps(date, file),
-        favorites = service.dmanager.favorites
+        favorites = service.dmanager.favorites,
+        projects=sorted(service.dmanager.projects.keys())
+
     )
 
 
@@ -88,6 +93,41 @@ def upload():
             flash(msg, msg_type)
     return render_template("upload/upload.html", all_tags=service.dmanager.all_tags)
 
+@app.route("/projects")
+def projects(): 
+    def safe(path: str): 
+        return urllib.parse.quote(path, safe='')
+
+    return render_template(
+        "projects/projects.html", 
+        projects=sorted(service.dmanager.projects.keys()),
+        safe=safe
+    )
+
+@app.route("/projects/<path:project_name>")
+def project(project_name: str): 
+    if project_name in service.dmanager.projects:
+        return render_template(
+            "projects/project.html", 
+            project_name=project_name,
+            project=service.dmanager.projects[project_name],
+        )
+    else: 
+        return redirect("/projects")
+
+@app.route("/api/projects/add", methods=["POST"])
+def add_project(): 
+    name = request.form.get("project_name") or ""
+    parent = request.form.get("project_parent") or ""
+    flash(*service.dmanager.add_project(os.path.join(parent, name)))
+    return redirect("/projects")
+
+@app.route("/api/projects/del", methods=["POST"])
+def del_project(): 
+    name = request.form.get("project_name") or ""
+    flash(*service.dmanager.del_project(name))
+    return redirect("/projects")
+
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 
     date = request.form.get('dir')
@@ -96,6 +136,8 @@ def handle_raw():
         msg, msg_type = service.unpack_raw(date, file)
     elif "delete-raw-data" in request.form: 
         msg, msg_type = service.delete_data(service.dir_raw, date, file)
+    else: 
+        msg, msg_type = ("Unknown option", "danger")
     flash(msg, msg_type)
     return redirect("/data/raw")
 
@@ -107,6 +149,8 @@ def handle_sweeps():
         return redirect(f"/data/analysis/{date}/{stem(file)}")
     elif "delete-sweeps" in request.form: 
         msg, msg_type = service.delete_data(service.dir_sweeps, date, file)
+    else: 
+        msg, msg_type = ("Unknown option", "danger")
     flash(msg, msg_type)
     return redirect("/data/sweeps")
 
@@ -118,6 +162,8 @@ def handle_analysis():
         return redirect(f"/data/analysis/{date}/{stem(file)}")
     elif "delete-all" in request.form: 
         msg, msg_type = service.delete_data(service.dir_analysis, date, file)
+    else: 
+        msg, msg_type = ("Unknown option", "danger")
     flash(msg, msg_type)
     return redirect("/data/analysis")
 
@@ -145,7 +191,9 @@ def analyse_peaks():
         analysis=service.get_single_analysis(
             date, filename, only_favorites=only_favorites
         ),
-        num_sweeps=service.num_sweeps(date, filename)
+        num_sweeps=service.num_sweeps(date, filename),
+        favorites=service.dmanager.favorites,
+        projects=sorted(service.dmanager.projects.keys())
     )
 
 

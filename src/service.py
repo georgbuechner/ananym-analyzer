@@ -6,8 +6,9 @@ import shutil
 from typing import Dict, List, OrderedDict, Tuple
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from dmanager import DManager
-from dmodels import Analysis, Sweep, Raw, AnalysisOpts
+from dmanager.dmanager import DManager
+from dmanager.dmodels import AnalysisOpts
+from dmanager.models import Analysis, Sweep, Raw
 from extractor.functions import Peaks
 from extractor.plotting import plot_data
 from extractor.preprocessing import convert_rows_to_columns, extract_data, join_lists

@@ -1,0 +1,75 @@
+<!doctype html>
+{% extends "layout/layout.html" %}
+{% block body %}
+  <h1>Projects</h1>
+
+  <!-- Button trigger modal -->
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">
+    Add Project
+  </button>
+  <br>
+  <br>
+
+  <div class="container" style="width:50%; text-align: left">
+    <ul>
+      {% for project_name in projects %} 
+        <li>
+          <b><a href="/projects/{{safe(project_name)}}">{{project_name}}<a></b>
+          <form action="/api/projects/del" method="POST" class="sameline">
+            <input type="hidden" name="project_name" value="{{project_name}}">
+            <button class="link-button" type="submit" name="del-project" class="btn btn-primary">
+              delete
+            </button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+
+  {% if projects|length > 20 %}
+    <br>
+    <br>
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProjectModal">
+      Add Project
+    </button>
+  {% endif %}
+
+  <!-- Modal -->
+  <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addProjectModalLabel">Add Project</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form action="/api/projects/add" method="POST">
+            <div class="mb-3">
+              <input 
+                id="project_name" name="project_name" 
+                class="form-control" 
+                type="text" 
+                placeholder="Project Name" 
+              >
+            </div>
+              <select class="form-select" id="project_parent" name="project_parent" aria-label="Default select example">
+                <option value="" selected>---</option>
+                {% for project_name in projects %}
+                  <option value="{{project_name}}">{{project_name}}</option>
+                {% endfor %}
+              </select>
+            <div class="mb-3">
+            </div>
+            <button type="submit" name="add-project" class="btn btn-primary">Add</button>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}

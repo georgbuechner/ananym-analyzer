@@ -1,0 +1,26 @@
+<!doctype html>
+{% extends "layout/layout.html" %}
+{% block body %}
+  <h1>{{project_name}}</h1>
+
+  <h5>Included analysis:</h5>
+  {% if project.analysis|length == 0 %} 
+    <p>No analysis yet. Add analysis by right clicking on an analysis's plot and
+    select "add to project".</p>
+  {% else %} 
+    <ul>
+      {% for analysis in project.analysis %} 
+        <li>
+          <b>{{analysis}}</b>
+          <form action="/api/project/remove-analysis" method="POST" class="sameline">
+            <input type="hidden" name="analysis_name" value="{{analysis_name}}">
+            <button class="link-button" type="submit" name="remove-analysis-from-project" class="btn btn-primary">
+              remove
+            </button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+{% endblock %}

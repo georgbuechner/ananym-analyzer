@@ -1,5 +1,9 @@
 import json
 import os
+import shutil
+from typing import Dict, Tuple
+
+from dmanager.dmodels import Project
 
 class DManager: 
     def __init__(self, upload_folder) -> None:
@@ -9,12 +13,14 @@ class DManager:
         self.dir_tags = os.path.join(upload_folder, "tags.json")
         self.dir_all_tags = os.path.join(upload_folder, "all_tags.json")
         self.dir_favorites = os.path.join(upload_folder, "favorites.json")
+        self.dir_projects = os.path.join(upload_folder, "projects")
         # Database fields
         self.peaks = {}
         self.map_num_sweeps = {}
         self.all_tags = []
         self.tags = {}
         self.favorites = {}
+        self.projects = self.load_projects()
         print("loading tags: ", self.all_tags)
         self.load_data()
 
@@ -31,7 +37,16 @@ class DManager:
             json.dump(self.tags, f)
          with open(self.dir_all_tags, "w") as f: 
             json.dump(self.all_tags, f)
-            print("lOaded tags: ", self.all_tags)
+            print("loaded tags: ", self.all_tags)
+
+    def load_projects(self) -> Dict[str, Project]: 
+        projects = {}
+        for (root, dirs, _) in os.walk(self.dir_projects):
+            for dir_name in dirs:
+                full_path = os.path.join(root, dir_name)
+                full_name = full_path[len(self.dir_projects)+1:]
+                projects[full_name] = Project(full_path)
+        return projects
 
     def load_data(self): 
         with open(self.dir_peaks, "r") as f: 
@@ -44,7 +59,7 @@ class DManager:
             self.all_tags = json.load(f)
         with open(self.dir_favorites, "r") as f: 
             self.favorites = json.load(f)
-    
+   
     def add_num_sweeps(self, path: str, num_sweeps: int) -> int: 
         self.map_num_sweeps[path] = num_sweeps
         self.store_num_sweeps()
@@ -59,3 +74,29 @@ class DManager:
         del self.favorites[name]
         with open(self.dir_favorites, "w") as f: 
             json.dump(self.favorites, f)
+
+    def add_project(self, name: str) -> Tuple[str, str]: 
+        if len(name) == 0: 
+            return ("missing project name!", "danger")
+        if name in self.projects: 
+            return ("Project already exists!", "danger")
+        project_path = os.path.join(self.dir_projects, name)
+        os.mkdir(project_path)
+        self.projects[name] = Project(project_path)
+        return (f"Sucessfully added project: {name}", "success")
+
+    def del_project(self, name: str) -> Tuple[str, str]: 
+        if name not in self.projects: 
+            return ("Project does not exist!", "danger")
+        project_path = os.path.join(self.dir_projects, name)
+        shutil.rmtree(project_path)
+        size_before = len(self.projects)
+        self.projects = self.load_projects()
+        num_deleted = size_before-len(self.projects)
+        if num_deleted > 1:
+            return (
+                f"Sucessfully removed project: {name} and {num_deleted-1} others",
+                "success"
+            )
+        else:
+            return (f"Sucessfully removed project: {name}", "success")
