@@ -150,10 +150,14 @@
               >&#10058;</button>
             </p>
             <div class="list-btn" style="margin-top: -3em">
-              <select class="form-select" aria-label="add to projects">
+              <select 
+                class="form-select" 
+                aria-label="add to projects" 
+                onchange="if (this.selectedIndex) AddToProject(this, '{{a.path}}');"
+              >
                 <option selected>No Project</option>
                 {% for project in projects %}
-                  <option value="{{project}}">{{project}}</option>
+                <option value="{{project}}"> {{"*" if project in a.projects}}{{project}}</option>
                 {% endfor %}
               </select>
             </div>

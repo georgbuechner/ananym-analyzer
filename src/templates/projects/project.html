@@ -12,15 +12,92 @@
       {% for analysis in project.analysis %} 
         <li>
           <b>{{analysis}}</b>
-          <form action="/api/project/remove-analysis" method="POST" class="sameline">
-            <input type="hidden" name="analysis_name" value="{{analysis_name}}">
-            <button class="link-button" type="submit" name="remove-analysis-from-project" class="btn btn-primary">
-              remove
-            </button>
-          </form>
+          <button 
+            class="link-button" 
+            onclick="RemoveFromProject('{{project_name}}', '{{analysis}}');" 
+            name="remove-analysis-from-project" 
+            class="btn btn-primary"
+          >
+            remove
+          </button>
         </li>
       {% endfor %}
     </ul>
   {% endif %}
+
+  <div id="carouselExampleIndicators" class="carousel carousel-dark slide" data-bs-ride="carousel">
+  <div class="carousel-indicators">
+    {% for a in analysis %}
+      {% if ".png" in a.path %}
+        <button 
+          type="button" 
+          data-bs-target="#carouselExampleIndicators" 
+          data-bs-slide-to="{{loop.index0}}" 
+          class="{% if loop.index == 1 %}active{% endif %}" 
+          aria-current="true" 
+          aria-label="Slide {{loop.index}}"
+        ></button>
+      {% endif %}
+    {% endfor %}
+  </div>
+  <div class="carousel-inner">
+    {% for a in analysis %}
+      {% if ".png" in a.path %}
+        <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+          <a href="#imgModal{{loop.index}}" type="" class="" data-bs-toggle="modal" data-bs-target="#imgModal{{loop.index}}">
+            <img src="/{{a.path}}" class="d-block w-100" alt="{{a.path}}">
+          </a>
+          <div class="carousel-caption d-none d-md-block bg-light"
+            style="background-color: rgba(255,255,255,0.8) !important;">
+            <h5>{{a.name}}</h5>
+            <p>Sweep-selection: {{a.selection}}, <i>v: {{a.version}}</i></p>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden text-secondary">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden text-secondary" >Next</span>
+    </button>
+  </div>
+  <button 
+    onclick="ShowOnlyFavorites();" 
+    class="nobutton {{"favorite" if request.args.get("only_favorites") else ""}}"
+  >&#10058;</button>
+
+
+{% for a in analysis %}
+  {% if ".png" in a.path %}
+    <div class="modal fade" id="imgModal{{loop.index}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">{{a.name}}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Sweep-selection: {{a.selection}}, 
+              <i>v: {{a.version}}</i> 
+              <button 
+                onclick="Favorite(this, '{{a.path}}');" 
+                class="nobutton {{"favorite" if a.path in favorites else ""}}"
+              >&#10058;</button>
+            </p>
+
+            <!--        include image here-->
+            <a download="{{a.name}}" href="/{{a.path | replace(".png", ".svg")}}" title="{{a.name}}">
+              <img src="/{{a.path}}" alt="{{a.path}}" class="img-fluid">
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+
 
 {% endblock %}

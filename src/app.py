@@ -1,9 +1,8 @@
 import os
 import urllib.parse
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
-from dmanager.dmanager import DManager
 from dmanager.dmodels import AnalysisOpts
-from dmanager.models import Sweep
+from dmanager.models import Sweep, Analysis
 from service import Service
 from utils import stem
 from extractor.functions import Peaks
@@ -107,10 +106,12 @@ def projects():
 @app.route("/projects/<path:project_name>")
 def project(project_name: str): 
     if project_name in service.dmanager.projects:
+        project = service.dmanager.projects[project_name]
         return render_template(
             "projects/project.html", 
             project_name=project_name,
-            project=service.dmanager.projects[project_name],
+            project=project,
+            analysis=[Analysis(analysis[:analysis.rfind("/")], analysis.split("/")[4], []) for analysis in project.analysis]
         )
     else: 
         return redirect("/projects")
@@ -127,6 +128,28 @@ def del_project():
     name = request.form.get("project_name") or ""
     flash(*service.dmanager.del_project(name))
     return redirect("/projects")
+
+@app.route("/api/projects/add_analysis", methods=["POST"])
+def add_to_project(): 
+    project = request.args.get("project") or ""
+    analysis_path = request.args.get("path") or ""
+    print(f"Got project: {project} and analysis_path: {analysis_path}")
+    if project in service.dmanager.projects: 
+        msg, code = service.dmanager.projects[project].add(analysis_path)
+    else:
+        msg, code = (f"Project {project} not found!", 404)
+    return msg, code
+
+@app.route("/api/projects/remove_analysis", methods=["POST"])
+def remove_from_project(): 
+    project = request.args.get("project") or ""
+    analysis_path = request.args.get("path") or ""
+    print(f"Got project: {project} and analysis_path: {analysis_path}")
+    if project in service.dmanager.projects: 
+        msg, code = service.dmanager.projects[project].remove(analysis_path)
+    else:
+        msg, code = (f"Project {project} not found!", 404)
+    return msg, code
 
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 

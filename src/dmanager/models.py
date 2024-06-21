@@ -32,12 +32,14 @@ class Sweep:
         return False
 
 class Analysis: 
-    def __init__(self, path: str, name: str) -> None:
+    def __init__(self, path: str, name: str, projects: List[str]) -> None:
+        print("Creating Analysis from: ", path, name)
         self.path = os.path.join(path, name)
         self.selection = name.split("_")[0]
         self.version = name.split("_")[1]
         self.name = name.split("_")[2]
         self.plug = {}
+        self.projects = projects
         path_to_plugin_data = os.path.join(path, name.replace(".png", "_plug"))
         if os.path.exists(path_to_plugin_data): 
             for entry in os.scandir(path_to_plugin_data):

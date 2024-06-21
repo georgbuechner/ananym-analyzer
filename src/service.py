@@ -94,10 +94,15 @@ class Service:
         path = os.path.join(self.dir_analysis, date, filename)
         ensure_dir_exists(f"{path}/")
         favorites = self.dmanager.favorites
-        analysis_data = [
-            Analysis(path, f) for f in os.listdir(path) 
-            if ".png" in f and (not only_favorites or os.path.join(path, f) in favorites)
-        ]
+        analysis_data = [] 
+        for f in os.listdir(path): 
+            if ".png" in f and (not only_favorites or os.path.join(path, f) in favorites):
+                full_path = os.path.join(path, f)
+                projects = [
+                    project_name for project_name, project in self.dmanager.projects.items() 
+                    if full_path in project.analysis
+                ]
+                analysis_data.append(Analysis(path, f, projects))
         # Sort by selection
         def get_selection(elem: Analysis): 
             return elem.selection
