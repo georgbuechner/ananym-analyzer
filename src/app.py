@@ -1,4 +1,5 @@
 import os
+import re
 import urllib.parse
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
 from dmanager.dmodels import AnalysisOpts
@@ -150,6 +151,12 @@ def remove_from_project():
     else:
         msg, code = (f"Project {project} not found!", 404)
     return msg, code
+
+@app.route("/api/projects/merge", methods=["POST"])
+def merge_project_analysis(): 
+    project_name = request.form.get("project_name") or ""
+    flash(*service.project_merge_analysis(project_name))
+    return redirect(f"/projects/{project_name}")
 
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 

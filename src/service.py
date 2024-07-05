@@ -7,9 +7,9 @@ from typing import Dict, List, OrderedDict, Tuple
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from dmanager.dmanager import DManager
-from dmanager.dmodels import AnalysisOpts
+from dmanager.dmodels import AnalysisOpts, Project
 from dmanager.models import Analysis, Sweep, Raw
-from extractor.functions import Peaks
+from extractor.functions import Peaks, calc_time_from_sweeps
 from extractor.plotting import plot_data
 from extractor.preprocessing import convert_rows_to_columns, extract_data, join_lists
 from extractor.ibw import VERSION, Selection, peaks, get_range
@@ -238,6 +238,25 @@ class Service:
             with open(os.path.join(plugin_path, "data.json"), "w") as f: 
                 json.dump(reduced, f)
             return reduced
+
+    def project_merge_analysis(self, project_name: str) -> Tuple[str, str]: 
+        if project_name not in self.dmanager.projects: 
+            return f"Project >>{project_name}<< not found!", "danger"
+        project = self.dmanager.projects[project_name]
+        sweeps = []
+        time = 0
+        for analysis in project.analysis: 
+             with open(f"{analysis.replace('.png', '.json')}", "r") as f: 
+                d = json.load(f)
+                time = calc_time_from_sweeps(d)
+                if len(d) > 1: 
+                    return (
+                        f"Merging not possible with more than one sweep. But atleast one analysis has {len(d)} sweeps!", 
+                        "danger"
+                    )
+                sweeps.append(d[0])
+        plot_data(f"data/projects/{project_name}/merge.ibw", sweeps, time)
+        return "", ""
 
     def _create_analysis_path(
         self, date: str, filename: str, opt: AnalysisOpts, start: int, end: int
