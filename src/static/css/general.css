@@ -47,6 +47,10 @@ h1 {
   color:red;
 }
 
+.sameline {
+  display: contents;
+}
+
 .indicators {
   background-color: #ff0101 !important;
 }

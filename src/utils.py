@@ -7,5 +7,7 @@ def ensure_dir_exists(path: str) -> None:
         print("Creating dirs: ", path, directory)
         os.makedirs(directory) 
 
-def stem(filename: str) -> str:
-    return os.path.splitext(filename)[0]
+def stem(path: str) -> str:
+    """ Gets path without extension (f.e. "path/to/dir" from "path/to/dir.txt")
+    """
+    return os.path.splitext(path)[0]

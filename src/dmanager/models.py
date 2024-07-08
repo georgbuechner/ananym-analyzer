@@ -1,21 +1,9 @@
-from enum import Enum
 import json
 import os
-from dataclasses import dataclass
-from dmanager import DManager
+from dmanager.dmanager import DManager
 from utils import stem
 from typing import List
-
-class AnalysisOpts(Enum):
-    ALL = 1
-    AVRG = 2
-    INROW = 3
-    STACKED = 4
-
-@dataclass
-class Tag: 
-    name: str 
-    raw: bool
+from dmanager.dmodels import Tag
 
 class Raw: 
     def __init__(self, dmanager: DManager, path: str, filename: str):
@@ -44,12 +32,15 @@ class Sweep:
         return False
 
 class Analysis: 
-    def __init__(self, path: str, name: str) -> None:
+    def __init__(self, path: str, name: str, projects: List[str]) -> None:
+        print("Creating Analysis from: ", path, name)
+        self.parent = path
         self.path = os.path.join(path, name)
         self.selection = name.split("_")[0]
         self.version = name.split("_")[1]
         self.name = name.split("_")[2]
         self.plug = {}
+        self.projects = projects
         path_to_plugin_data = os.path.join(path, name.replace(".png", "_plug"))
         if os.path.exists(path_to_plugin_data): 
             for entry in os.scandir(path_to_plugin_data):

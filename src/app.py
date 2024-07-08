@@ -1,7 +1,12 @@
 import os
+import re
+from typing import Tuple
+import urllib.parse
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
-from dmodels import AnalysisOpts, Sweep, get_tags
-from service import Service, Data
+from matplotlib.pyplot import ylim
+from dmanager.dmodels import AnalysisOpts
+from dmanager.models import Sweep
+from service import Service
 from utils import stem
 from extractor.functions import Peaks
 from dotenv import load_dotenv
@@ -39,20 +44,13 @@ def analysis(date: str = "", file: str = ""):
     if date == "" and file == "": 
         return render_template("data/analysis.html", data=service.get_analysis())
     if request.method == 'POST':
-        print(request.form)
-        try: 
-            ylim = (
-                float(request.form.get("ylim_min")), float(request.form.get("ylim_max"))
-            )
-        except: 
-            ylim = None 
         msg, msg_type = service.do_analysis(
             date=date, 
             filename=file, 
             opt=AnalysisOpts(int(request.form.get("opt") or 1)),
             start=int(request.form.get("sweep_range"))-1,
             end=int(request.form.get("sweep_range_to")),
-            ylim=ylim,
+            ylim=_get_ylim(request)
         )
         flash(msg, msg_type)
     sweep = Sweep(service.dmanager, date, file)
@@ -69,7 +67,9 @@ def analysis(date: str = "", file: str = ""):
             date, file, only_favorites=only_favorites
         ),
         num_sweeps=service.num_sweeps(date, file),
-        favorites = service.dmanager.favorites
+        favorites = service.dmanager.favorites,
+        projects=sorted(service.dmanager.projects.keys())
+
     )
 
 
@@ -88,6 +88,86 @@ def upload():
             flash(msg, msg_type)
     return render_template("upload/upload.html", all_tags=service.dmanager.all_tags)
 
+@app.route("/projects")
+def projects(): 
+    def safe(path: str): 
+        return urllib.parse.quote(path, safe='')
+
+    return render_template(
+        "projects/projects.html", 
+        projects=sorted(service.dmanager.projects.keys()),
+        safe=safe
+    )
+
+@app.route("/projects/<path:project_name>")
+def project(project_name: str): 
+    if project_name in service.dmanager.projects:
+        project = service.dmanager.projects[project_name]
+        return render_template(
+            "projects/project.html", 
+            project_name=project_name,
+            project=project,
+            analysis=service.get_project_analysis_objs(project),
+            project_analysis=service.dmanager.get_project_analysis(project_name)
+        )
+    else: 
+        return redirect("/projects")
+
+@app.route("/api/projects/add", methods=["POST"])
+def add_project(): 
+    name = request.form.get("project_name") or ""
+    parent = request.form.get("project_parent") or ""
+    flash(*service.dmanager.add_project(os.path.join(parent, name)))
+    return redirect("/projects")
+
+@app.route("/api/projects/del", methods=["POST"])
+def del_project(): 
+    name = request.form.get("project_name") or ""
+    flash(*service.dmanager.del_project(name))
+    return redirect("/projects")
+
+@app.route("/api/projects/add_analysis", methods=["POST"])
+def add_to_project(): 
+    project = request.args.get("project") or ""
+    analysis_path = request.args.get("path") or ""
+    print(f"Got project: {project} and analysis_path: {analysis_path}")
+    if project in service.dmanager.projects: 
+        msg, code = service.dmanager.projects[project].add(analysis_path)
+    else:
+        msg, code = (f"Project {project} not found!", 404)
+    return msg, code
+
+@app.route("/api/projects/remove_analysis", methods=["POST"])
+def remove_from_project(): 
+    project = request.args.get("project") or ""
+    analysis_path = request.args.get("path") or ""
+    print(f"Got project: {project} and analysis_path: {analysis_path}")
+    if project in service.dmanager.projects: 
+        msg, code = service.dmanager.projects[project].remove(analysis_path)
+    else:
+        msg, code = (f"Project {project} not found!", 404)
+    return msg, code
+
+@app.route("/api/projects/stack", methods=["POST"])
+def stack_project_analysis(): 
+    project_name = request.form.get("project_name") or ""
+    flash(
+        *service.project_stack_analysis(project_name, ylim=_get_ylim(request))
+    )
+    return redirect(f"/projects/{project_name}")
+
+@app.route("/api/projects/del/stacked", methods=["POST"])
+def del_stacked_project_analysis(): 
+    path = request.form.get("path") or ""
+    project_name = request.form.get("project_name") or ""
+    try:
+        os.remove(f"{path}.png")
+        os.remove(f"{path}.svg")
+        flash("Successfully deleted project analysis.", "success")
+    except Exception as e:
+        flash(f"Failed: {repr(e)}.", "success")
+    return redirect(f"/projects/{project_name}")
+
 @app.route("/handle/raw", methods=["POST"])
 def handle_raw(): 
     date = request.form.get('dir')
@@ -96,6 +176,8 @@ def handle_raw():
         msg, msg_type = service.unpack_raw(date, file)
     elif "delete-raw-data" in request.form: 
         msg, msg_type = service.delete_data(service.dir_raw, date, file)
+    else: 
+        msg, msg_type = ("Unknown option", "danger")
     flash(msg, msg_type)
     return redirect("/data/raw")
 
@@ -107,6 +189,8 @@ def handle_sweeps():
         return redirect(f"/data/analysis/{date}/{stem(file)}")
     elif "delete-sweeps" in request.form: 
         msg, msg_type = service.delete_data(service.dir_sweeps, date, file)
+    else: 
+        msg, msg_type = ("Unknown option", "danger")
     flash(msg, msg_type)
     return redirect("/data/sweeps")
 
@@ -118,6 +202,8 @@ def handle_analysis():
         return redirect(f"/data/analysis/{date}/{stem(file)}")
     elif "delete-all" in request.form: 
         msg, msg_type = service.delete_data(service.dir_analysis, date, file)
+    else: 
+        msg, msg_type = ("Unknown option", "danger")
     flash(msg, msg_type)
     return redirect("/data/analysis")
 
@@ -145,7 +231,9 @@ def analyse_peaks():
         analysis=service.get_single_analysis(
             date, filename, only_favorites=only_favorites
         ),
-        num_sweeps=service.num_sweeps(date, filename)
+        num_sweeps=service.num_sweeps(date, filename),
+        favorites=service.dmanager.favorites,
+        projects=sorted(service.dmanager.projects.keys())
     )
 
 
@@ -183,7 +271,7 @@ def remove_tag():
 
 
 @app.route('/data/analysis/<date>/<name>/<filename>')
-def serve_image(date, name, filename):
+def serve_image_analysis(date, name, filename):
     # Specify the path to the directory where your images are stored
     image_directory = os.path.abspath(os.path.join(service.dir_analysis, date, name))
     return send_from_directory(image_directory, filename)
@@ -194,8 +282,15 @@ def serve_image_plug(date, name, plug_dir, plugin, sweep):
     image_directory = os.path.abspath(
         os.path.join(service.dir_analysis, date, name, plug_dir, plugin)
     )
-    print("Got img dir: ", image_directory)
     return send_from_directory(image_directory, sweep)
+
+@app.route('/data/projects/<project_name>/<filename>')
+def serve_image_project(project_name: str, filename: str):
+    # Specify the path to the directory where your images are stored
+    image_directory = os.path.abspath(
+        os.path.join(service.dmanager.dir_projects, project_name)
+    )
+    return send_from_directory(image_directory, filename)
 
 @app.route('/api/favorites/add/<path:path>', methods=["POST"])
 def api_add_favorite(path: str):
@@ -227,6 +322,14 @@ def search(location: str, tags: str):
         all_tags=service.dmanager.all_tags,
         collapsed=tags==""
     )
+
+def _get_ylim(req) -> Tuple[float, float] | None: 
+    try: 
+        return (
+            float(req.form.get("ylim_min")), float(req.form.get("ylim_max"))
+        )
+    except: 
+        return None 
 
 if __name__ == "__main__": 
     load_dotenv()
