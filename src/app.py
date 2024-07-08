@@ -1,9 +1,11 @@
 import os
 import re
+from typing import Tuple
 import urllib.parse
 from flask import Flask, flash, render_template, redirect, request, send_from_directory
+from matplotlib.pyplot import ylim
 from dmanager.dmodels import AnalysisOpts
-from dmanager.models import Sweep, Analysis
+from dmanager.models import Sweep
 from service import Service
 from utils import stem
 from extractor.functions import Peaks
@@ -42,20 +44,13 @@ def analysis(date: str = "", file: str = ""):
     if date == "" and file == "": 
         return render_template("data/analysis.html", data=service.get_analysis())
     if request.method == 'POST':
-        print(request.form)
-        try: 
-            ylim = (
-                float(request.form.get("ylim_min")), float(request.form.get("ylim_max"))
-            )
-        except: 
-            ylim = None 
         msg, msg_type = service.do_analysis(
             date=date, 
             filename=file, 
             opt=AnalysisOpts(int(request.form.get("opt") or 1)),
             start=int(request.form.get("sweep_range"))-1,
             end=int(request.form.get("sweep_range_to")),
-            ylim=ylim,
+            ylim=_get_ylim(request)
         )
         flash(msg, msg_type)
     sweep = Sweep(service.dmanager, date, file)
@@ -112,7 +107,8 @@ def project(project_name: str):
             "projects/project.html", 
             project_name=project_name,
             project=project,
-            analysis=[Analysis(analysis[:analysis.rfind("/")], analysis.split("/")[4], []) for analysis in project.analysis]
+            analysis=service.get_project_analysis_objs(project),
+            project_analysis=service.dmanager.get_project_analysis(project_name)
         )
     else: 
         return redirect("/projects")
@@ -152,10 +148,24 @@ def remove_from_project():
         msg, code = (f"Project {project} not found!", 404)
     return msg, code
 
-@app.route("/api/projects/merge", methods=["POST"])
-def merge_project_analysis(): 
+@app.route("/api/projects/stack", methods=["POST"])
+def stack_project_analysis(): 
     project_name = request.form.get("project_name") or ""
-    flash(*service.project_merge_analysis(project_name))
+    flash(
+        *service.project_stack_analysis(project_name, ylim=_get_ylim(request))
+    )
+    return redirect(f"/projects/{project_name}")
+
+@app.route("/api/projects/del/stacked", methods=["POST"])
+def del_stacked_project_analysis(): 
+    path = request.form.get("path") or ""
+    project_name = request.form.get("project_name") or ""
+    try:
+        os.remove(f"{path}.png")
+        os.remove(f"{path}.svg")
+        flash("Successfully deleted project analysis.", "success")
+    except Exception as e:
+        flash(f"Failed: {repr(e)}.", "success")
     return redirect(f"/projects/{project_name}")
 
 @app.route("/handle/raw", methods=["POST"])
@@ -261,7 +271,7 @@ def remove_tag():
 
 
 @app.route('/data/analysis/<date>/<name>/<filename>')
-def serve_image(date, name, filename):
+def serve_image_analysis(date, name, filename):
     # Specify the path to the directory where your images are stored
     image_directory = os.path.abspath(os.path.join(service.dir_analysis, date, name))
     return send_from_directory(image_directory, filename)
@@ -272,8 +282,15 @@ def serve_image_plug(date, name, plug_dir, plugin, sweep):
     image_directory = os.path.abspath(
         os.path.join(service.dir_analysis, date, name, plug_dir, plugin)
     )
-    print("Got img dir: ", image_directory)
     return send_from_directory(image_directory, sweep)
+
+@app.route('/data/projects/<project_name>/<filename>')
+def serve_image_project(project_name: str, filename: str):
+    # Specify the path to the directory where your images are stored
+    image_directory = os.path.abspath(
+        os.path.join(service.dmanager.dir_projects, project_name)
+    )
+    return send_from_directory(image_directory, filename)
 
 @app.route('/api/favorites/add/<path:path>', methods=["POST"])
 def api_add_favorite(path: str):
@@ -305,6 +322,14 @@ def search(location: str, tags: str):
         all_tags=service.dmanager.all_tags,
         collapsed=tags==""
     )
+
+def _get_ylim(req) -> Tuple[float, float] | None: 
+    try: 
+        return (
+            float(req.form.get("ylim_min")), float(req.form.get("ylim_max"))
+        )
+    except: 
+        return None 
 
 if __name__ == "__main__": 
     load_dotenv()

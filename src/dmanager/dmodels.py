@@ -47,5 +47,3 @@ class Project:
     def safe(self) -> None: 
         with open(self.project_file, "w") as f: 
             json.dump(self.analysis, f)
-
-

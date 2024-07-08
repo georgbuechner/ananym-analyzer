@@ -1,9 +1,10 @@
 import json
 import os
 import shutil
-from typing import Dict, Tuple
+from typing import Dict, List, Tuple
 
 from dmanager.dmodels import Project
+from utils import stem
 
 class DManager: 
     def __init__(self, upload_folder) -> None:
@@ -100,3 +101,13 @@ class DManager:
             )
         else:
             return (f"Sucessfully removed project: {name}", "success")
+
+    def get_project_analysis(self, project_name: str) -> List[str]: 
+        project_analysis = []
+        project_path = os.path.join(self.dir_projects, project_name)
+        for filename in os.listdir(project_path):
+            f = os.path.join(project_path, filename)
+            # checking if it is a file and only base path (not .png AND .svg)
+            if os.path.isfile(f) and ".png" in filename:
+                project_analysis.append(stem(f))
+        return project_analysis

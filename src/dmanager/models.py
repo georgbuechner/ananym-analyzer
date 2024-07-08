@@ -34,6 +34,7 @@ class Sweep:
 class Analysis: 
     def __init__(self, path: str, name: str, projects: List[str]) -> None:
         print("Creating Analysis from: ", path, name)
+        self.parent = path
         self.path = os.path.join(path, name)
         self.selection = name.split("_")[0]
         self.version = name.split("_")[1]

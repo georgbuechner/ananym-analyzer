@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 from typing import Dict, List, OrderedDict, Tuple
+from matplotlib.cbook import delete_masked_points
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from dmanager.dmanager import DManager
@@ -78,6 +79,11 @@ class Service:
             sweeps.sort(key=(lambda x: _get_key_num(x.name)))
             sweeps_data[relative_path] = sweeps
         return OrderedDict(sorted(sweeps_data.items()))
+
+    def get_project_analysis_objs(self, project: Project) -> List[Analysis]: 
+        return [
+            Analysis(a[:a.rfind("/")], a.split("/")[4], []) for a in project.analysis
+        ]
 
     def get_searched(self, get_data_func: Callable[[], Data], tags: str) -> Data: 
         data = get_data_func()
@@ -186,7 +192,6 @@ class Service:
             self.dir_sweeps, date, f'{filename}.json'
         )
         base_path = self._create_analysis_path(date, filename, opt, start, end)
-        print("GOT base_path:", base_path)
         # Load sweeps
         with open(path, "r") as f: 
             all_sweeps = json.load(f)
@@ -197,7 +202,6 @@ class Service:
             all_sweeps, Selection(start, end, opt==AnalysisOpts.AVRG)
         )
         if opt == AnalysisOpts.AVRG or opt == AnalysisOpts.INROW:
-            print("Doing AVRG/INROW:")
             plot_data(
                 f"{base_path}.ibw", join_lists(sweeps), len(sweeps)*time, ylim=ylim
             )
@@ -205,7 +209,6 @@ class Service:
             with open(f"{base_path}.json", "w") as f: 
                 json.dump(sweeps, f)
         elif opt == AnalysisOpts.ALL: 
-            print("Doing ALL")
             for index, sweep in enumerate(sweeps):
                 sweep_path = base_path.replace("XX", str(index).zfill(2))
                 plot_data(f"{sweep_path}.ibw", sweep, time, ylim=ylim)
@@ -239,7 +242,9 @@ class Service:
                 json.dump(reduced, f)
             return reduced
 
-    def project_merge_analysis(self, project_name: str) -> Tuple[str, str]: 
+    def project_stack_analysis(
+        self, project_name: str, ylim: Tuple[float, float]
+    ) -> Tuple[str, str]: 
         if project_name not in self.dmanager.projects: 
             return f"Project >>{project_name}<< not found!", "danger"
         project = self.dmanager.projects[project_name]
@@ -255,8 +260,9 @@ class Service:
                         "danger"
                     )
                 sweeps.append(d[0])
-        plot_data(f"data/projects/{project_name}/merge.ibw", sweeps, time)
-        return "", ""
+        path = os.path.join(self.dmanager.dir_projects, project_name)
+        plot_data(f"{path}/stacked.ibw", sweeps, time, ylim=ylim)
+        return "Successfully stacked projects analysis", "success"
 
     def _create_analysis_path(
         self, date: str, filename: str, opt: AnalysisOpts, start: int, end: int

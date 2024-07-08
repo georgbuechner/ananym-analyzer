@@ -64,17 +64,61 @@
         <span class="visually-hidden text-secondary" >Next</span>
       </button>
     </div>
-    <button 
-      onclick="ShowOnlyFavorites();" 
-      class="nobutton {{"favorite" if request.args.get("only_favorites") else ""}}"
-    >&#10058;</button>
   </div>
   <br><br>
-  <form method="post" action="/api/projects/merge">
+  <form method="post" action="/api/projects/stack">
     <input type="hidden" name="project_name" value="{{project_name}}">
-    <button type="submit" name="analyze_peaks" class="btn btn-secondary">Merge</button>
+    <div class="mb-3">
+      <input type="number" class="form-input" id="ylim_min" name="ylim_min">
+      <label class="form-label" for="ylim_min">Y-Axis Min</label>
+      <input type="number" class="form-input" id="ylim_max" name="ylim_max">
+      <label class="form-label" for="ylim_max">Y-Axis Max</label>
+    </div>
+    <button type="submit" name="analyze_peaks" class="btn btn-secondary">Stack</button>
   </form>
+  <br><br>
 
+  <div id="project_analysis_indicators" class="carousel carousel-dark slide" data-bs-ride="carousel">
+    <div class="carousel-indicators">
+      {% for pa in project_analysis %}
+        <button 
+          type="button" 
+          data-bs-target="#project_analysis_indicators" 
+          data-bs-slide-to="{{loop.index0}}" 
+          class="{% if loop.index == 1 %}active{% endif %}" 
+          aria-current="true" 
+          aria-label="Slide {{loop.index}}"
+        ></button>
+      {% endfor %}
+    </div>
+    <div class="carousel-inner">
+      {% for pa in project_analysis %}
+        <div class="carousel-item {% if loop.index == 1 %}active{% endif %}">
+          <a 
+            href="#imgProjectModal{{loop.index}}" 
+            data-bs-target="#imgProjectModal{{loop.index}}"
+            type="" class="" data-bs-toggle="modal"
+          >
+            <img src="/{{pa}}.png" class="d-block w-100" alt="/{{pa}}.png">
+          </a>
+          <div 
+            class="carousel-caption d-none d-md-block bg-light"
+            style="background-color: rgba(255,255,255,0.8) !important;"
+          >
+            <h5>{{pa[pa.rfind("/")+1:]}}</h5>
+          </div>
+        </div>
+      {% endfor %}
+      <button class="carousel-control-prev" type="button" data-bs-target="#project_analysis_indicators" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden text-secondary">Previous</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#project_analysis_indicators" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden text-secondary" >Next</span>
+      </button>
+    </div>
+  </div>
 
 {% for a in analysis %}
   {% if ".png" in a.path %}
@@ -89,12 +133,8 @@
             <div>
               <p>Sweep-selection: {{a.selection}}, 
                 <i>v: {{a.version}}</i> 
-                <button 
-                  onclick="Favorite(this, '{{a.path}}');" 
-                  class="nobutton {{"favorite" if a.path in favorites else ""}}"
-                >&#10058;</button>
               </p>
-              <a class="link-button" href="/{{a.path[:a.path.rfind('/')]}}">Go to analysis:</a>
+              <a class="link-button" href="/{{a.parent}}">Go to analysis:</a>
             </div>
 
             <!--        include image here-->
@@ -106,6 +146,43 @@
       </div>
     </div>
   {% endif %}
+{% endfor %}
+
+{% for pa in project_analysis %}
+  <div 
+    class="modal fade" 
+    id="imgProjectModal{{loop.index}}" 
+    tabindex="-1" 
+    aria-labelledby="exampleModalLabel" 
+    aria-hidden="true"
+  >
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">{{pa[pa.rfind("/")+1:]}}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div>
+            <p>Name: {{pa[pa.rfind("/")+1:]}}</p>
+          </div>
+
+          <!--        include image here-->
+          <a download="{{pa[pa.rfind("/")+1:]}}" href="/{{pa}}.svg" title="{{pa[pa.rfind("/")+1:]}}">
+            <img src="/{{pa}}.svg" alt="{{pa}}.svg" class="img-fluid">
+          </a>
+        </div>
+        <div class="modal-footer">
+            <form method="post" action="/api/projects/del/stacked" class="float-end">
+              <input type="hidden" name="path" value="{{pa}}">
+              <input type="hidden" name="project_name" value="{{project_name}}">
+              <button type="submit" name="delete-analysis" class="btn btn-secondary" data-bs-dismiss="modal">Delete</button>
+            </form>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
 {% endfor %}
 
 {% endblock %}
