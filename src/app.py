@@ -284,13 +284,13 @@ def serve_image_plug(date, name, plug_dir, plugin, sweep):
     )
     return send_from_directory(image_directory, sweep)
 
-@app.route('/data/projects/<project_name>/<filename>')
-def serve_image_project(project_name: str, filename: str):
+@app.route('/data/projects/<path:project_analysis>')
+def serve_image_project(project_analysis: str):
     # Specify the path to the directory where your images are stored
-    image_directory = os.path.abspath(
-        os.path.join(service.dmanager.dir_projects, project_name)
+    absolute_path = os.path.abspath(
+        os.path.join(service.dmanager.dir_projects, project_analysis)
     )
-    return send_from_directory(image_directory, filename)
+    return send_from_directory(*os.path.split(absolute_path))
 
 @app.route('/api/favorites/add/<path:path>', methods=["POST"])
 def api_add_favorite(path: str):
