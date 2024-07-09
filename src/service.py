@@ -203,7 +203,7 @@ class Service:
         )
         if opt == AnalysisOpts.AVRG or opt == AnalysisOpts.INROW:
             plot_data(
-                f"{base_path}.ibw", join_lists(sweeps), len(sweeps)*time, ylim=ylim
+                base_path, join_lists(sweeps), len(sweeps)*time, ylim=ylim
             )
             # Store sweep-selection
             with open(f"{base_path}.json", "w") as f: 
@@ -211,12 +211,12 @@ class Service:
         elif opt == AnalysisOpts.ALL: 
             for index, sweep in enumerate(sweeps):
                 sweep_path = base_path.replace("XX", str(index).zfill(2))
-                plot_data(f"{sweep_path}.ibw", sweep, time, ylim=ylim)
+                plot_data(sweep_path, sweep, time, ylim=ylim)
                 # Store sweep-selection
                 with open(f"{sweep_path}.json", "w") as f: 
                     json.dump([sweep], f)
         elif opt == AnalysisOpts.STACKED: 
-            plot_data(f"{base_path}.ibw", sweeps, time, ylim=ylim)
+            plot_data(base_path, sweeps, time, ylim=ylim)
         return ("Successfully analysed data!", "success")
 
     def calc_peaks(self, path: str, peaks_info: Peaks) -> Dict[int, Dict]: 
@@ -231,7 +231,7 @@ class Service:
                 reduced[key] = value["df"]
                 sweep_path = os.path.join(plugin_path, key)
                 plot_data(
-                    f"{sweep_path}.ibw", 
+                    sweep_path, 
                     sweeps[int(key)], 
                     time,
                     min_peaks=value["min"],
@@ -260,8 +260,8 @@ class Service:
                         "danger"
                     )
                 sweeps.append(d[0])
-        path = os.path.join(self.dmanager.dir_projects, project_name)
-        plot_data(f"{path}/stacked.ibw", sweeps, time, ylim=ylim)
+        path = os.path.join(self.dmanager.dir_projects, project_name, "stacked")
+        plot_data(path, sweeps, time, ylim=ylim)
         return "Successfully stacked projects analysis", "success"
 
     def _create_analysis_path(
