@@ -1,9 +1,9 @@
+import io
 import os
-import re
-from typing import Tuple
+import zipfile
+from typing import List, Tuple
 import urllib.parse
-from flask import Flask, flash, render_template, redirect, request, send_from_directory
-from matplotlib.pyplot import ylim
+from flask import Flask, flash, render_template, redirect, request, send_file, send_from_directory
 from dmanager.dmodels import AnalysisOpts
 from dmanager.models import Sweep
 from service import Service
@@ -322,6 +322,48 @@ def search(location: str, tags: str):
         all_tags=service.dmanager.all_tags,
         collapsed=tags==""
     )
+
+@app.route("/api/create/minimal/<project_name>")
+def create_project_minimal(project_name: str): 
+# List of file paths to include in the zip archive
+    file_paths = [
+        f"{stem(a)}.json" for a in service.dmanager.projects[project_name].analysis 
+    ]
+    files_with_name = { 
+        f"{a[14:24]}_{stem(a[a.rfind("/")+1:])}":a[a.rfind("/")+1:] for a in file_paths 
+    }
+    file_paths.append("src/extractor/functions.py")
+    file_paths.append("src/templates/minimal/requirements.txt")
+    minimal_py = render_template('minimal/minimal.py', analysis=files_with_name)
+
+    # Create the zip archive
+    zip_buffer = create_zip_archive(file_paths, minimal_py)
+
+    # Send the zip file
+    return send_file(
+        zip_buffer, 
+        mimetype='application/zip', 
+        as_attachment=True, 
+        download_name=f"analyzer_project_{project_name}"
+    )
+
+def create_zip_archive(file_paths: List[str], minimal_py: str):
+    # Create a BytesIO object to hold the zip file in memory
+    zip_buffer = io.BytesIO()
+
+    # Create a zip file object
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        for file_path in file_paths:
+            # Add each file to the zip archive
+            zip_file.write(file_path, arcname=file_path.split('/')[-1])
+        # Add the rendered minimal.py file to the zip archive
+        zip_file.writestr('run.py', minimal_py)
+
+    # Ensure the buffer position is at the beginning
+    zip_buffer.seek(0)
+
+    return zip_buffer
+
 
 def _get_ylim(req) -> Tuple[float, float] | None: 
     try: 

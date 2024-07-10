@@ -217,6 +217,9 @@ class Service:
                     json.dump([sweep], f)
         elif opt == AnalysisOpts.STACKED: 
             plot_data(base_path, sweeps, time, ylim=ylim)
+            # Store sweep-selection
+            with open(f"{base_path}.json", "w") as f: 
+                json.dump(sweeps, f)
         return ("Successfully analysed data!", "success")
 
     def calc_peaks(self, path: str, peaks_info: Peaks) -> Dict[int, Dict]: 

@@ -25,6 +25,26 @@
     </ul>
   {% endif %}
 
+  <a 
+    download="analyzer_project_{{project_name}}" 
+    href="/api/create/minimal/{{project_name}}" 
+    title="
+        Dowload minimal code example with the analysis for this project. 
+        After downloading: 
+        ```
+          unzip <name>.zip -d <name>
+          cd <name> 
+          python3 -m venv .venv 
+          source .venv/bin/activate 
+          pip install -r requirements 
+        ```
+        Then edit the code in `run.py` to your needs. 
+        Finally run: `python3 run.py`
+    "
+  >
+    Dowload minimal
+  </a>
+
   <div id="carouselExampleIndicators" class="carousel carousel-dark slide" data-bs-ride="carousel">
     <div class="carousel-indicators">
       {% for a in analysis %}
