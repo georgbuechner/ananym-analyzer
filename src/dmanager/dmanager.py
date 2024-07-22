@@ -86,6 +86,23 @@ class DManager:
         self.projects[name] = Project(project_path)
         return (f"Sucessfully added project: {name}", "success")
 
+    def rename_project(self, cur_name: str, new_name: str) -> Tuple[str, str]: 
+        print(f"Renaming project \"{cur_name}\" to \"{new_name}\"")
+        if cur_name not in self.projects: 
+            return ("Project does not exist!", "danger")
+        if new_name in self.projects: 
+            return (f"Project \"{new_name}\" already exists!", "danger")
+        self.projects[new_name] = self.projects[cur_name] 
+        del self.projects[cur_name]
+        shutil.move(
+            os.path.join(self.dir_projects, cur_name),
+            os.path.join(self.dir_projects, new_name)
+        )
+        return (
+            f"Project \"{cur_name}\" sucessfully renamed to: \"{new_name}\"",
+            "success"
+        )
+
     def del_project(self, name: str) -> Tuple[str, str]: 
         if name not in self.projects: 
             return ("Project does not exist!", "danger")

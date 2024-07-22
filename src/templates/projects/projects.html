@@ -14,11 +14,19 @@
     <ul>
       {% for project_name in projects %} 
         <li>
-          <b><a href="/projects/{{safe(project_name)}}">{{project_name}}<a></b>
+          <b><a href="/projects/{{safe(project_name)}}">{{project_name}}</a></b>
           <form action="/api/projects/del" method="POST" class="sameline">
             <input type="hidden" name="project_name" value="{{project_name}}">
-            <button class="link-button" type="submit" name="del-project" class="btn btn-primary">
-              delete
+            <button 
+              type="button" 
+              class="link-button" 
+              data-bs-toggle="modal" 
+              data-bs-target="#renameProjectModal{{project_name | replace('/', '_')}}"
+            >
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="link-button" type="submit" name="del-project">
+              <i class="bi bi-trash"></i>
             </button>
           </form>
         </li>
@@ -35,7 +43,7 @@
     </button>
   {% endif %}
 
-  <!-- Modal -->
+  <!-- Modal ADD -->
   <div class="modal fade" id="addProjectModal" tabindex="-1" aria-labelledby="addProjectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -47,7 +55,8 @@
           <form action="/api/projects/add" method="POST">
             <div class="mb-3">
               <input 
-                id="project_name" name="project_name" 
+                id="project_name" 
+                name="project_name" 
                 class="form-control" 
                 type="text" 
                 placeholder="Project Name" 
@@ -70,6 +79,61 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal RENAME -->
+  {% for project_name in projects %}
+    <div 
+      class="modal fade" 
+      id="renameProjectModal{{project_name | replace('/', '_')}}" 
+      tabindex="-1" 
+      aria-labelledby="renameProjectModal{{project_name | replace('/', '_')}}Label" 
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="renameProjectModal{{project_name | replace('/', '_')}}Label">
+              Rename Project
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form action="/api/projects/rename" method="POST">
+              <div class="mb-3">
+                <input 
+                  id="project_name" 
+                  name="project_name" 
+                  class="form-control" 
+                  type="text" 
+                  placeholder="{{project_name[project_name.rfind('/')+1:]}}" 
+                >
+                <input type="hidden" name="cur_project_name" value="{{project_name}}">
+              </div>
+                <select class="form-select" id="project_parent" name="project_parent" aria-label="Default select example">
+                  {% if "/" in project_name %}
+                    <option 
+                      value="{{project_name[:project_name.rfind('/')]}}"
+                      selected>{{project_name[:project_name.rfind('/')]}}
+                    </option>
+                  {% else %}
+                    <option value="" selected>---</option>
+                  {% endif %}
+                  {% for project_name in projects %}
+                    <option value="{{project_name}}">{{project_name}}</option>
+                  {% endfor %}
+                </select>
+              <div class="mb-3">
+              </div>
+              <button type="submit" name="rename-project" class="btn btn-primary">Rename</button>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
 
 
 {% endblock %}

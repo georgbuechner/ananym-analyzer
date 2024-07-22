@@ -120,6 +120,14 @@ def add_project():
     flash(*service.dmanager.add_project(os.path.join(parent, name)))
     return redirect("/projects")
 
+@app.route("/api/projects/rename", methods=["POST"])
+def rename_project(): 
+    name = request.form.get("project_name") or ""
+    parent = request.form.get("project_parent") or ""
+    cur_name = request.form.get("cur_project_name") or ""
+    flash(*service.dmanager.rename_project(cur_name, os.path.join(parent, name)))
+    return redirect("/projects")
+
 @app.route("/api/projects/del", methods=["POST"])
 def del_project(): 
     name = request.form.get("project_name") or ""
@@ -334,6 +342,7 @@ def create_project_minimal(project_name: str):
     }
     file_paths.append("src/extractor/functions.py")
     file_paths.append("src/templates/minimal/requirements.txt")
+    file_paths.append("src/templates/minimal/README.md")
     minimal_py = render_template('minimal/minimal.py', analysis=files_with_name)
 
     # Create the zip archive
