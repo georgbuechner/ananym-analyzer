@@ -143,7 +143,7 @@ class Service:
     ) -> Tuple[str, str]: 
         path_to_file = os.path.join(base_path, date, filename)
         if not os.path.exists(path_to_file): 
-            return ('File does not exist! ', 'danger')
+            return (f'File {path_to_file} does not exist! ', 'danger')
         if os.path.isdir(path_to_file): 
             shutil.rmtree(path_to_file)
         else:

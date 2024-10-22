@@ -196,7 +196,7 @@ def handle_sweeps():
     if "analyze-sweeps" in request.form:
         return redirect(f"/data/analysis/{date}/{stem(file)}")
     elif "delete-sweeps" in request.form: 
-        msg, msg_type = service.delete_data(service.dir_sweeps, date, file)
+        msg, msg_type = service.delete_data(service.dir_sweeps, date, f"{file}.json")
     else: 
         msg, msg_type = ("Unknown option", "danger")
     flash(msg, msg_type)
