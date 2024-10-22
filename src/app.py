@@ -8,7 +8,7 @@ from dmanager.dmodels import AnalysisOpts
 from dmanager.models import Sweep
 from service import Service
 from utils import stem
-from extractor.functions import Peaks
+from extractor.functions import Peaks, Scalebar
 from dotenv import load_dotenv
 
 UPLOAD_FOLDER = 'data/'
@@ -44,13 +44,22 @@ def analysis(date: str = "", file: str = ""):
     if date == "" and file == "": 
         return render_template("data/analysis.html", data=service.get_analysis())
     if request.method == 'POST':
+        scaleysize = request.form.get("scale_y_size") or ""
+        scalexsize = request.form.get("scale_x_size") or ""
+        scalebar_infos = Scalebar(
+            show="show_scalebar" in request.form,
+            hide_ticks="hide_ticks" in request.form, 
+            ysize=int(scaleysize) if scaleysize != "" else None,
+            xsize=int(scalexsize) if scalexsize != "" else None,
+        )
         msg, msg_type = service.do_analysis(
             date=date, 
             filename=file, 
             opt=AnalysisOpts(int(request.form.get("opt") or 1)),
             start=int(request.form.get("sweep_range"))-1,
             end=int(request.form.get("sweep_range_to")),
-            ylim=_get_ylim(request)
+            ylim=_get_ylim(request),
+            scalebar=scalebar_infos
         )
         flash(msg, msg_type)
     sweep = Sweep(service.dmanager, date, file)

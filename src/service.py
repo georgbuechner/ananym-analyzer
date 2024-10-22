@@ -10,7 +10,7 @@ from werkzeug.utils import secure_filename
 from dmanager.dmanager import DManager
 from dmanager.dmodels import AnalysisOpts, Project
 from dmanager.models import Analysis, Sweep, Raw
-from extractor.functions import Peaks, calc_time_from_sweeps
+from extractor.functions import Peaks, Scalebar, calc_time_from_sweeps
 from extractor.plotting import plot_data
 from extractor.preprocessing import convert_rows_to_columns, extract_data, join_lists
 from extractor.ibw import VERSION, Selection, peaks, get_range
@@ -187,6 +187,7 @@ class Service:
         start: int,
         end: int, 
         ylim: Tuple[float, float], 
+        scalebar: Scalebar,
     ) -> Tuple[str, str]: 
         path = os.path.join(
             self.dir_sweeps, date, f'{filename}.json'
@@ -203,7 +204,11 @@ class Service:
         )
         if opt == AnalysisOpts.AVRG or opt == AnalysisOpts.INROW:
             plot_data(
-                base_path, join_lists(sweeps), len(sweeps)*time, ylim=ylim
+                base_path, 
+                join_lists(sweeps), 
+                len(sweeps)*time, 
+                ylim=ylim,
+                scalebar=scalebar
             )
             # Store sweep-selection
             with open(f"{base_path}.json", "w") as f: 
@@ -211,12 +216,12 @@ class Service:
         elif opt == AnalysisOpts.ALL: 
             for index, sweep in enumerate(sweeps):
                 sweep_path = base_path.replace("XX", str(index).zfill(2))
-                plot_data(sweep_path, sweep, time, ylim=ylim)
+                plot_data(sweep_path, sweep, time, ylim=ylim, scalebar=scalebar)
                 # Store sweep-selection
                 with open(f"{sweep_path}.json", "w") as f: 
                     json.dump([sweep], f)
         elif opt == AnalysisOpts.STACKED: 
-            plot_data(base_path, sweeps, time, ylim=ylim)
+            plot_data(base_path, sweeps, time, ylim=ylim, scalebar=scalebar)
             # Store sweep-selection
             with open(f"{base_path}.json", "w") as f: 
                 json.dump(sweeps, f)

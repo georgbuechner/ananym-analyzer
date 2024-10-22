@@ -71,11 +71,45 @@
         <option value="4">stacked</option>
       </select>
     </div>
-    <input type="number" class="form-input" id="ylim_min" name="ylim_min">
-    <label class="form-label" for="ylim_min">Y-Axis Min</label>
-    <input type="number" class="form-input" id="ylim_max" name="ylim_max">
-    <label class="form-label" for="ylim_max">Y-Axis Max</label>
-
+    <div class="mb-3 row">
+      <label class="col-sm-2 col-form-label" for="ylim_min">Y-Axis Min: </label>
+      <div class="col-sm-2">
+        <input type="number" class="form-control" id="ylim_min" name="ylim_min">
+      </div>
+      <div class="col-sm-2"> </div>
+      <div class="col-sm-2">
+        <input 
+          type="checkbox" class="form-check-input" id="show_scalebar" name="show_scalebar" 
+          onchange="ToggleScaleBarOptions();"
+        >
+        <label class="form-check-label" for="show_scalebar">Show Scalebar? </label>
+      </div>
+      <label 
+        class="col-sm-2 col-form-label" id="for_scale_y_size"
+        for="scale_y_size" style="display: none;"
+      >scaleYsize: </label>
+      <div class="col-sm-2" style="display: none;" id="scale_bar_opt_y">
+        <input type="number" class="form-control" id="scale_y_size" name="scale_y_size">
+      </div>
+    </div>
+    <div class="mb-3 row">
+      <label class="col-sm-2 col-form-label" for="ylim_max">Y-Axis Max: </label>
+      <div class="col-sm-2">
+        <input type="number" class="form-control" id="ylim_max" name="ylim_max">
+      </div>
+      <div class="col-sm-2"> </div>
+      <div class="col-sm-2" id="scale_bar_opt_ticks" style="display: none;">
+        <input type="checkbox" class="form-check-input" id="hide_ticks" name="hide_ticks">
+        <label class="form-check-label" for="hide_ticks">Hide Ticks</label>
+      </div>
+      <label 
+        class="col-sm-2 col-form-label" id="for_scale_x_size"
+        for="scale_x_size" style="display: none;"
+      >scaleXsize: </label>
+      <div class="col-sm-2" style="display: none;" id="scale_bar_opt_x">
+        <input type="number" class="form-control" id="scale_x_size" name="scale_x_size">
+      </div>
+    </div>
   </div>
   <button type="submit" class="btn btn-primary">Analyze</button>
 </form>
