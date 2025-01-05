@@ -198,7 +198,13 @@ class Service:
             all_sweeps = json.load(f)
         # Get sweeps in specified range 
         if start > end or start < 0 or end > len(all_sweeps): 
-            return ("start or end invalid!", "success")
+            # Potentially reload stored number of sweeps
+            if path in self.dmanager.map_num_sweeps:
+                del self.dmanager.map_num_sweeps[path] 
+            return (
+                f"start ({start}) or end ({end}) invalid! (num sweeps: {len(all_sweeps)}). Please try again.", 
+                "danger"
+            )
         sweeps, time = get_range(
             all_sweeps, Selection(start, end, opt==AnalysisOpts.AVRG)
         )
@@ -295,7 +301,6 @@ def _get_key_num(name: str) -> str:
     try:
         re_str = r"\S(\d\d?)\S*"
         m = re.search(re_str, name) 
-        print("Found: ", m.group(1).rjust(3, "0"))
         return m.group(1).rjust(3, "0")
     except Exception as err: 
         print("Failed to get num from {name}: {repr(err)}")
