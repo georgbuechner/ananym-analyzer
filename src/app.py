@@ -1,5 +1,6 @@
 import io
 import os
+import json
 import zipfile
 from typing import List, Tuple
 import urllib.parse
@@ -11,7 +12,9 @@ from utils import stem
 from extractor.functions import Peaks, Scalebar
 from dotenv import load_dotenv
 
-UPLOAD_FOLDER = 'data/'
+with open("server.config") as f:
+    config = json.load(f)
+    UPLOAD_FOLDER = config["upload_folder"]
 
 app = Flask(__name__)
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
