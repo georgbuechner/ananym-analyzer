@@ -1,9 +1,12 @@
 import os
+import json
 import shutil
 from datetime import date
 
-DATA_DIR = "data/"
-BACKUP_LOCATION = "backups/"
+with open("server.config") as f:
+    config = json.load(f)
+    DATA_DIR = config["upload_folder"]
+    BACKUP_LOCATION = config["backups"]
 
 today = date.today() 
 date_format = today.strftime("%Y_%b_%d_")

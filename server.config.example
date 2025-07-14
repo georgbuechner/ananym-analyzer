@@ -1,3 +1,4 @@
 {
-  "upload_folder": "data/" 
+  "upload_folder": "data/",
+  "backups": "backups/" 
 }
